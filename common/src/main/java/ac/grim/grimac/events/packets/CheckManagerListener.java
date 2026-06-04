@@ -1,6 +1,10 @@
 package ac.grim.grimac.events.packets;
 
 import ac.grim.grimac.GrimAPI;
+import ac.grim.grimac.modifications.Boat2b2tModifications;
+import ac.grim.grimac.modifications.BoatMoveVerdict;
+import ac.grim.grimac.modifications.Movement2b2tModifications;
+import ac.grim.grimac.modifications.MovementLimits2b2tModifications;
 import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.update.*;
 import ac.grim.grimac.utils.blockplace.BlockPlaceResult;
@@ -466,6 +470,9 @@ public class CheckManagerListener extends PacketListenerAbstract {
             Location pos = flying.getLocation();
             boolean ignoreRotation = player.packetStateData.lastPacketWasOnePointSeventeenDuplicate && player.isIgnoreDuplicatePacketRotation();
             handleFlying(player, pos.getX(), pos.getY(), pos.getZ(), ignoreRotation ? 0 : pos.getYaw(), ignoreRotation ? 0 : pos.getPitch(), flying.hasPositionChanged(), flying.hasRotationChanged() && !ignoreRotation, flying.isOnGround(), teleportData, event);
+            if (event.isCancelled()) {
+                return;
+            }
         }
 
         if (event.getPacketType() == PacketType.Play.Client.VEHICLE_MOVE && player.inVehicle()) {
@@ -477,6 +484,23 @@ public class CheckManagerListener extends PacketListenerAbstract {
             player.lastZ = player.z;
 
             Vector3d clamp = VectorUtils.clampVector(position);
+            double fromX = player.x;
+            double fromY = player.y;
+            double fromZ = player.z;
+
+            BoatMoveVerdict boatVerdict = Boat2b2tModifications.evaluateVehicleMove(
+                    player, clamp, fromX, fromY, fromZ, move.getYaw(), move.getPitch()
+            );
+            if (boatVerdict != BoatMoveVerdict.ALLOW) {
+                event.setCancelled(true);
+                player.onPacketCancel();
+                Boat2b2tModifications.rollbackVehicle(player, fromX, fromY, fromZ);
+                return;
+            }
+
+            player.lastX = fromX;
+            player.lastY = fromY;
+            player.lastZ = fromZ;
             player.x = clamp.getX();
             player.y = clamp.getY();
             player.z = clamp.getZ();
@@ -725,7 +749,7 @@ public class CheckManagerListener extends PacketListenerAbstract {
         if (hasPosition) {
             Vector3d position = new Vector3d(x, y, z);
             Vector3d clampVector = VectorUtils.clampVector(position);
-            final PositionUpdate update = new PositionUpdate(new Vector3d(player.x, player.y, player.z), position, onGround, teleportData.getSetback(), teleportData.getTeleportData(), teleportData.isTeleport());
+            Vector3d positionFrom = new Vector3d(player.x, player.y, player.z);
 
             // Stupidity doesn't care about 0.03
             if (!player.packetStateData.lastPacketWasOnePointSeventeenDuplicate) {
@@ -733,17 +757,50 @@ public class CheckManagerListener extends PacketListenerAbstract {
             }
 
             if (!player.inVehicle() && !player.packetStateData.lastPacketWasOnePointSeventeenDuplicate) {
+                double packetDeltaY = clampVector.getY() - player.y;
+                MovementLimits2b2tModifications.updatePacketStateBeforeMove(player, onGround, packetDeltaY);
+                if (ac.grim.grimac.modifications.Speed2b2tModifications.tryBlockSpeedPacket(
+                        player, player.x, player.y, player.z, clampVector, onGround, event)) {
+                    return;
+                }
+                if (ac.grim.grimac.modifications.Step2b2tModifications.tryBlockStepPacket(
+                        player, clampVector, onGround, event)) {
+                    return;
+                }
+
                 player.lastX = player.x;
                 player.lastY = player.y;
                 player.lastZ = player.z;
 
+                Movement2b2tModifications.tickFireworkBoostGrace(player);
+                MovementLimits2b2tModifications.trackPacketState(player, clampVector, onGround, yaw, pitch);
+
                 player.x = clampVector.getX();
                 player.y = clampVector.getY();
                 player.z = clampVector.getZ();
+                player.boundingBox = GetBoundingBox.getCollisionBoxForPlayer(player, player.x, player.y, player.z);
 
+                PositionUpdate update = new PositionUpdate(
+                        positionFrom,
+                        clampVector,
+                        onGround,
+                        teleportData.getSetback(),
+                        teleportData.getTeleportData(),
+                        teleportData.isTeleport()
+                );
                 player.checkManager.onPositionUpdate(update);
-            } else if (update.isTeleport()) { // Mojang doesn't use their own exit vehicle field to leave vehicles, manually call the setback handler
-                player.getSetbackTeleportUtil().onPredictionComplete(new PredictionComplete(0, update, true));
+            } else {
+                PositionUpdate update = new PositionUpdate(
+                        positionFrom,
+                        position,
+                        onGround,
+                        teleportData.getSetback(),
+                        teleportData.getTeleportData(),
+                        teleportData.isTeleport()
+                );
+                if (update.isTeleport()) {
+                    player.getSetbackTeleportUtil().onPredictionComplete(new PredictionComplete(0, update, true));
+                }
             }
         }
 

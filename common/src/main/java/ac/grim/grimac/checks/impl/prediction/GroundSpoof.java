@@ -1,6 +1,7 @@
 package ac.grim.grimac.checks.impl.prediction;
 
 import ac.grim.grimac.checks.Check;
+import ac.grim.grimac.modifications.Movement2b2tModifications;
 import ac.grim.grimac.checks.CheckData;
 import ac.grim.grimac.checks.type.PostPredictionCheck;
 import ac.grim.grimac.player.GrimPlayer;
@@ -28,6 +29,7 @@ public class GroundSpoof extends Check implements PostPredictionCheck {
         if (player.getSetbackTeleportUtil().blockOffsets) return;
         // Viaversion sends wrong ground status... (doesn't matter but is annoying)
         if (player.packetStateData.lastPacketWasTeleport) return;
+        if (Movement2b2tModifications.shouldExemptGroundSpoof(player)) return;
 
         if (player.clientClaimsLastOnGround != player.onGround) {
             flagAndAlertWithSetback("claimed " + player.clientClaimsLastOnGround);

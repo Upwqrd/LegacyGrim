@@ -160,6 +160,63 @@ VehicleTimer:
     # Target 1.005 timer
     setbackvl: 10
 
+# 2b2t.org.ru fork settings (reload with /grim reload)
+AntiPearlPhase2b2t:
+    enabled: true
+    push-on-movement: false
+    push-on-pearl-land: true
+    pearl-cancel-target-distance: 3
+    pearl-cancel-down-pitch-limit: 45.0
+    phase-above-feet: 0.55
+
+Movement2b2t:
+    firework-boost-grace-ticks: 55
+    glide-end-coast-ticks: 55
+
+MovementLimits2b2t:
+    enabled: true
+    max-horizontal-per-tick: 0.417
+    jump-first-ticks-horizontal-cap: 0.72
+    jump-first-ticks-grace: 5
+    jump-air-horizontal-cap: 0.72
+    jump-air-horizontal-grace-ticks: 20
+    pre-cancel-horizontal-per-tick: 0.48
+    hard-strafe-barrier-enabled: false
+    hard-strafe-barrier-per-tick: 0.435
+    max-step-without-jump: 1.0
+    blatant-high-jump-delta-y: 1.0
+    setback-violation-level: 1
+    blatant-horizontal-per-tick: 0.48
+    max-hover-air-ticks: 3
+    hover-delta-y-epsilon: 0.004
+    blatant-fly-ascend-delta-y: 0.55
+    blatant-fly-min-air-ticks: 18
+    air-probe-depth: 1.5
+
+Fly2b2t:
+    enabled: false
+
+# Horizontal speed (fly-style): packet cancel + tick cumulative + post-prediction rollback
+Speed2b2t:
+    enabled: true
+    max-sustained-blocks-per-tick: 0.417
+    max-packet-blocks-per-tick: 0.435
+    max-tick-cumulative-blocks: 0.45
+    blatant-blocks-per-tick: 0.55
+    jump-burst-max-blocks-per-tick: 0.72
+    jump-burst-grace-ticks: 20
+
+Crystal2b2t:
+    enabled: false
+
+# Shoreline SpeedMine / instant rebreak (START-ABORT-FINISH sequences)
+Breaking2b2t:
+    enabled: true
+    max-dig-packets-per-tick: 5
+    rebreak-cooldown-ticks: 8
+    min-break-ticks: 1
+    min-break-ms-same-tick: 250
+
 PacketOrderI:
     # enable if players are getting flagged for using 1.7 animations mods
     exempt-placing-while-digging: false

@@ -25,6 +25,14 @@ public class VehicleData {
     public boolean wasVehicleSwitch = false;
     public float playerPitch = 0f;
     public float playerYaw = 0f;
+    public double lastVehiclePacketY = 0;
+    public boolean highSpeedBoatOnBlocks = false;
+    public boolean hasLastLegitBoatPosition = false;
+    public double lastLegitX;
+    public double lastLegitY;
+    public double lastLegitZ;
+    public float lastLegitYaw;
+    public float lastLegitPitch;
     public final Deque<IntToObjectPair<JumpableEntity>> pendingJumps = new ArrayDeque<>();
     public final ConcurrentLinkedQueue<IntToObjectPair<Vector3d>> vehicleTeleports = new ConcurrentLinkedQueue<>();
     public SprintingState camelSprintingState = SprintingState.STOPPED;

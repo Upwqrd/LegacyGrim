@@ -7,6 +7,7 @@ import ac.grim.grimac.utils.anticheat.LogUtil;
 public class TickRunner implements StartableInitable {
     @Override
     public void start() {
+        new PacketPathClassWarmup().start();
         LogUtil.info("Registering tick schedulers...");
 
         if (GrimAPI.INSTANCE.getPlatform() == Platform.FOLIA) {

@@ -7,6 +7,8 @@ import ac.grim.grimac.checks.impl.aim.AimModulo360;
 import ac.grim.grimac.checks.impl.aim.processor.AimProcessor;
 import ac.grim.grimac.checks.impl.badpackets.*;
 import ac.grim.grimac.checks.impl.breaking.*;
+import ac.grim.grimac.checks.impl.breaking.SpeedMineLimits2b2t;
+import ac.grim.grimac.checks.impl.vehicle.BoatLimits2b2t;
 import ac.grim.grimac.checks.impl.chat.ChatA;
 import ac.grim.grimac.checks.impl.chat.ChatB;
 import ac.grim.grimac.checks.impl.chat.ChatC;
@@ -21,9 +23,14 @@ import ac.grim.grimac.checks.impl.misc.ClientBrand;
 import ac.grim.grimac.checks.impl.misc.GhostBlockMitigation;
 import ac.grim.grimac.checks.impl.misc.Post;
 import ac.grim.grimac.checks.impl.misc.TransactionOrder;
+import ac.grim.grimac.checks.impl.movement.ElytraLimits2b2t;
+import ac.grim.grimac.checks.impl.movement.FlyLimits2b2t;
 import ac.grim.grimac.checks.impl.movement.NoSlow;
 import ac.grim.grimac.checks.impl.movement.PredictionRunner;
 import ac.grim.grimac.checks.impl.movement.SetbackBlocker;
+import ac.grim.grimac.checks.impl.movement.StepLimits2b2t;
+import ac.grim.grimac.checks.impl.movement.SpeedLimits2b2t;
+import ac.grim.grimac.checks.impl.movement.StrafeLimits2b2t;
 import ac.grim.grimac.checks.impl.movement.VehiclePredictionRunner;
 import ac.grim.grimac.checks.impl.multiactions.*;
 import ac.grim.grimac.checks.impl.packetorder.*;
@@ -192,8 +199,14 @@ public class CheckManager {
                 .put(PacketOrderK.class, new PacketOrderK(player))
                 .put(PacketOrderL.class, new PacketOrderL(player))
                 .put(PacketOrderM.class, new PacketOrderM(player))
-                .put(GroundSpoof.class, new GroundSpoof(player))
                 .put(OffsetHandler.class, new OffsetHandler(player))
+                .put(BoatLimits2b2t.class, new BoatLimits2b2t(player))
+                .put(StrafeLimits2b2t.class, new StrafeLimits2b2t(player))
+                .put(SpeedLimits2b2t.class, new SpeedLimits2b2t(player))
+                .put(GroundSpoof.class, new GroundSpoof(player))
+                .put(FlyLimits2b2t.class, new FlyLimits2b2t(player))
+                .put(ElytraLimits2b2t.class, new ElytraLimits2b2t(player))
+                .put(StepLimits2b2t.class, new StepLimits2b2t(player))
                 .put(SuperDebug.class, new SuperDebug(player))
                 .put(DebugHandler.class, new DebugHandler(player))
                 .put(BadPacketsX.class, new BadPacketsX(player))
@@ -249,6 +262,7 @@ public class CheckManager {
                 .build();
 
         blockBreakChecks = new ImmutableClassToInstanceMap.Builder<BlockBreakCheck>()
+                .put(SpeedMineLimits2b2t.class, new SpeedMineLimits2b2t(player))
                 .put(AirLiquidBreak.class, new AirLiquidBreak(player))
                 .put(WrongBreak.class, new WrongBreak(player))
                 .put(RotationBreak.class, new RotationBreak(player))

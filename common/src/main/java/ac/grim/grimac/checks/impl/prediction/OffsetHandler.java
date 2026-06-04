@@ -6,6 +6,9 @@ import ac.grim.grimac.api.event.events.CompletePredictionEvent;
 import ac.grim.grimac.checks.Check;
 import ac.grim.grimac.checks.CheckData;
 import ac.grim.grimac.checks.type.PostPredictionCheck;
+import ac.grim.grimac.modifications.Elytra2b2tModifications;
+import ac.grim.grimac.modifications.Movement2b2tModifications;
+import ac.grim.grimac.modifications.Strafe2b2tModifications;
 import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.update.PredictionComplete;
 
@@ -33,6 +36,26 @@ public class OffsetHandler extends Check implements PostPredictionCheck {
         if (!predictionComplete.isChecked()) return;
 
         double offset = predictionComplete.getOffset();
+        double horiz = Math.hypot(player.actualMovement.getX(), player.actualMovement.getZ());
+        double deltaY = player.actualMovement.getY();
+
+        if (player.isGliding) {
+            if (Elytra2b2tModifications.shouldBypassVanillaSimulation(player, horiz, deltaY)) {
+                advantageGained *= setbackDecayMultiplier;
+                removeOffsetLenience();
+                return;
+            }
+        } else if (Movement2b2tModifications.shouldBypassVanillaSimulation(player, deltaY, horiz)) {
+            advantageGained *= setbackDecayMultiplier;
+            removeOffsetLenience();
+            return;
+        }
+
+        if (Strafe2b2tModifications.shouldBypassVanillaSimulation(player, horiz)) {
+            advantageGained *= setbackDecayMultiplier;
+            removeOffsetLenience();
+            return;
+        }
 
         if (COMPLETE_CHANNEL.fire(player, this, offset)) return;
 

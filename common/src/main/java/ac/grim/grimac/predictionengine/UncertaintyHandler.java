@@ -323,6 +323,9 @@ public class UncertaintyHandler {
                 offset -= 0.01;
         }
 
+        offset = ac.grim.grimac.modifications.Boat2b2tModifications.reduceBoatSpeedOffset(player, offset);
+        offset = ac.grim.grimac.modifications.Strafe2b2tModifications.reduceStrafeOffset(player, offset);
+
         return Math.max(0, offset);
     }
 

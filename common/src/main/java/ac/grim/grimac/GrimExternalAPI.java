@@ -9,6 +9,7 @@ import ac.grim.grimac.api.event.events.GrimReloadEvent;
 import ac.grim.grimac.api.plugin.GrimPlugin;
 import ac.grim.grimac.api.storage.backend.BackendRegistry;
 import ac.grim.grimac.manager.config.ConfigManagerFileImpl;
+import ac.grim.grimac.modifications.Fork2b2tConfig;
 import ac.grim.grimac.manager.init.start.StartableInitable;
 import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.LogUtil;
@@ -219,6 +220,7 @@ public class GrimExternalAPI implements GrimAbstractAPI, ConfigReloadObserver, S
         }
         // Update variables
         updateVariables();
+        Fork2b2tConfig.reloadAll(configManager);
         // Restart
         GrimAPI.INSTANCE.getAlertManager().reload(configManager);
         GrimAPI.INSTANCE.getDiscordManager().reload();
