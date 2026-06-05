@@ -1,5 +1,6 @@
 package ac.grim.grimac.modifications;
 
+import ac.grim.grimac.api.config.ConfigManager;
 import ac.grim.grimac.checks.impl.movement.StepLimits2b2t;
 import ac.grim.grimac.player.GrimPlayer;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
@@ -10,9 +11,18 @@ import com.github.retrooper.packetevents.util.Vector3d;
  */
 public final class Step2b2tModifications {
 
-    private static final double STEP_EPSILON = 0.02D;
+    private static final String PREFIX = "Step2b2t.";
+
+    public static boolean enabled = true;
+    private static double stepEpsilon = 0.02D;
     /** Vanilla jump takeoff vertical — not a step. */
-    private static final double JUMP_TAKEOFF_MAX_DELTA_Y = 0.42D;
+    private static double jumpTakeoffMaxDeltaY = 0.42D;
+
+    public static void reload(ConfigManager config) {
+        enabled = config.getBooleanElse(PREFIX + "enabled", true);
+        stepEpsilon = config.getDoubleElse(PREFIX + "step-epsilon", 0.02D);
+        jumpTakeoffMaxDeltaY = config.getDoubleElse(PREFIX + "jump-takeoff-delta-y", 0.42D);
+    }
 
     public static double getMaxLegitStepDeltaY() {
         return MovementLimits2b2tModifications.maxStepWithoutJump;
@@ -40,21 +50,27 @@ public final class Step2b2tModifications {
             return StepVerdict.ALLOW;
         }
 
-        if (deltaY > getMaxLegitStepDeltaY() + STEP_EPSILON) {
+        if (deltaY > getMaxLegitStepDeltaY() + stepEpsilon) {
             clearStepAscendAnchor(player);
             return StepVerdict.STEP_TOO_HIGH;
         }
 
         if (hasJumpPacket(player)) {
             clearStepAscendAnchor(player);
-            if (isVanillaJumpTakeoffOnly(player, deltaY, packetOnGround)) {
+            if (isLegitJumpAscent(player, deltaY, packetOnGround)) {
                 return StepVerdict.ALLOW;
             }
-            return StepVerdict.STEP_JUMP_DURING_ASCENT;
+            // Only flag jump-during-step when actively ascending a multi-block step sequence.
+            if (player.packetStateData.hasStepAscendAnchorY
+                    && deltaY > 0
+                    && deltaY <= getMaxLegitStepDeltaY() + stepEpsilon) {
+                return StepVerdict.STEP_JUMP_DURING_ASCENT;
+            }
+            return StepVerdict.ALLOW;
         }
 
         double cumulativeAscend = trackStepAscend(player, fromY, toY);
-        if (cumulativeAscend > getMaxLegitStepDeltaY() + STEP_EPSILON) {
+        if (cumulativeAscend > getMaxLegitStepDeltaY() + stepEpsilon) {
             clearStepAscendAnchor(player);
             return StepVerdict.STEP_TOO_HIGH;
         }
@@ -83,17 +99,20 @@ public final class Step2b2tModifications {
     }
 
     /**
-     * True only for first-tick jump impulse (~0.42), not step-up with jump held.
+     * Vanilla sprint-jump arc — not step-up with jump held during a 2×1 step sequence.
      */
-    private static boolean isVanillaJumpTakeoffOnly(GrimPlayer player, double deltaY, boolean packetOnGround) {
-        if (deltaY > JUMP_TAKEOFF_MAX_DELTA_Y + STEP_EPSILON) {
+    private static boolean isLegitJumpAscent(GrimPlayer player, double deltaY, boolean packetOnGround) {
+        if (MovementLimits2b2tModifications.isInJumpSpeedGrace(player, deltaY, packetOnGround)) {
+            return true;
+        }
+        if (deltaY > jumpTakeoffMaxDeltaY + stepEpsilon) {
             return false;
         }
         if (packetOnGround) {
             return true;
         }
         return player.packetStateData.wasOnGroundLastStrafeTick
-                || player.packetStateData.consecutiveAirTicks <= 2;
+                || player.packetStateData.ticksSinceOnGround <= Strafe2b2tModifications.bunnyHopGroundGraceTicks;
     }
 
     public static boolean isLegitStepTick(GrimPlayer player, double deltaY, double horizPerTick) {
@@ -118,6 +137,9 @@ public final class Step2b2tModifications {
         double fromY = player.y;
         double deltaY = packetPosition.getY() - fromY;
         double horiz = Math.hypot(packetPosition.getX() - player.x, packetPosition.getZ() - player.z);
+        if (MovementLimits2b2tModifications.isInJumpSpeedGrace(player, deltaY, packetOnGround)) {
+            return false;
+        }
         StepVerdict verdict = evaluateVerticalStep(
                 player, deltaY, horiz, packetOnGround, fromY, packetPosition.getY());
         if (verdict == StepVerdict.ALLOW) {

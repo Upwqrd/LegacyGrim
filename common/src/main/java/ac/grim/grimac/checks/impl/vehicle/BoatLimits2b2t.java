@@ -35,7 +35,7 @@ public class BoatLimits2b2t extends Check implements PostPredictionCheck {
         }
 
         double horiz = Math.hypot(player.actualMovement.getX(), player.actualMovement.getZ());
-        BoatMoveVerdict verdict = horiz > Boat2b2tModifications.MAX_HORIZONTAL_BLOCKS_PER_TICK
+        BoatMoveVerdict verdict = horiz > Boat2b2tModifications.maxHorizontalBlocksPerTick
                 ? BoatMoveVerdict.SPEED_EXCEEDED
                 : BoatMoveVerdict.FLY_VIOLATION;
 

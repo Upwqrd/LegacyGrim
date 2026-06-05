@@ -161,6 +161,8 @@ VehicleTimer:
     setbackvl: 10
 
 # 2b2t.org.ru fork settings (reload with /grim reload)
+# All fork modules read keys from this file — old server configs do not auto-migrate new keys.
+
 AntiPearlPhase2b2t:
     enabled: true
     push-on-movement: false
@@ -172,16 +174,68 @@ AntiPearlPhase2b2t:
 Movement2b2t:
     firework-boost-grace-ticks: 55
     glide-end-coast-ticks: 55
+    elytra-deploy-grace-ticks: 30
+    chestplate-swap-grace-ticks: 30
+    respawn-step-grace-ticks: 30
+    steep-fall-delta-y: -0.1
+    hard-horizontal-fall-limit: 1.75
+
+Elytra2b2t:
+    steep-dive-pitch: 32.0
+    steep-dive-delta-y: -0.1
+
+# Inactive — no Java module (reserved for future use)
+Sprint2b2t:
+    enabled: true
+    allow-strafe-sprint: true
+    allow-stationary-sprint: true
+    max-strafe-sprint-horiz-per-tick: 0.435
+
+# Inactive — no Java module (reserved for future use)
+NoFall2b2t:
+    enabled: true
+    min-fall-blocks: 3.0
+    min-air-ticks: 3
+    min-air-on-ground-streak: 3
+
+Strafe2b2t:
+    enabled: true
+    max-strafe-horizontal-per-tick: 0.388
+    strict-strafe-tolerance: 0.02
+    vanilla-burst-horizontal-cap: 0.72
+    jump-grace-air-ticks: 18
+    bunny-hop-ground-grace-ticks: 4
+    max-air-strafe-exploit-ticks: 50
+    fall-delta-y-threshold: -0.02
+    jump-delta-y-threshold: 0.035
+    hover-delta-y-epsilon: 0.006
+    ascend-delta-y-min: 0.015
+    blatant-cheat-horizontal: 1.1
+
+Step2b2t:
+    enabled: true
+    step-epsilon: 0.02
+    jump-takeoff-delta-y: 0.42
+
+Boat2b2t:
+    enabled: true
+    max-horizontal-blocks-per-tick: 0.83
+    happy-ghast-max-horizontal-blocks-per-tick: 0.417
+    max-air-horizontal-blocks-per-tick: 0.25
+    high-speed-desync-lenience-sq: 9.0
+    air-scan-depth: 2.0
+
+log-all-flags-to-console: true
 
 MovementLimits2b2t:
     enabled: true
     max-horizontal-per-tick: 0.417
-    jump-first-ticks-horizontal-cap: 0.62
+    jump-first-ticks-horizontal-cap: 0.72
     jump-first-ticks-grace: 5
     jump-air-horizontal-cap: 0.72
     jump-air-horizontal-grace-ticks: 20
     pre-cancel-horizontal-per-tick: 0.48
-    hard-strafe-barrier-enabled: false
+    hard-strafe-barrier-enabled: true
     hard-strafe-barrier-per-tick: 0.435
     max-step-without-jump: 1.0
     blatant-high-jump-delta-y: 1.0
@@ -192,11 +246,28 @@ MovementLimits2b2t:
     blatant-fly-ascend-delta-y: 0.55
     blatant-fly-min-air-ticks: 18
     air-probe-depth: 1.5
+    ground-speed-slack: 0.012
+    air-speed-slack: 0.012
+    jump-takeoff-delta-y: 0.035
+    natural-jump-arc-ticks: 45
 
 Fly2b2t:
-    enabled: false
+    enabled: true
+    jump-grace-air-ticks: 20
+    max-hover-air-ticks: 3
+    max-ascend-air-ticks: 2
+    hover-delta-y-epsilon: 0.006
+    ascend-delta-y-min: 0.028
+    blatant-ascend-delta-y: 0.075
+    max-air-ascend-per-tick: 0.42
+    max-boost-air-ascend-per-tick: 0.56
+    min-momentum-horiz-for-elytra-exempt: 0.08
+    min-momentum-dy-for-elytra-exempt: 0.06
+    max-slow-fall-air-ticks: 22
+    slow-fly-packet-air-ticks: 4
+    slow-fly-max-delta-y: 0.06
+    slow-fly-min-delta-y: -0.08
 
-# Horizontal speed (fly-style): packet cancel + tick cumulative + post-prediction rollback
 Speed2b2t:
     enabled: true
     max-sustained-blocks-per-tick: 0.417
@@ -205,17 +276,22 @@ Speed2b2t:
     blatant-blocks-per-tick: 0.55
     jump-burst-max-blocks-per-tick: 0.72
     jump-burst-grace-ticks: 20
+    max-long-jump-arc-blocks: 10.0
+    max-long-jump-horiz-per-tick: 0.85
 
 Crystal2b2t:
     enabled: false
 
-# Shoreline SpeedMine / instant rebreak (START-ABORT-FINISH sequences)
 Breaking2b2t:
     enabled: true
-    max-dig-packets-per-tick: 5
-    rebreak-cooldown-ticks: 8
-    min-break-ticks: 1
-    min-break-ms-same-tick: 250
+    max-dig-packets-per-tick: 3
+    rebreak-cooldown-ticks: 20
+    min-break-ticks: 2
+    min-break-ms: 275
+    min-break-ms-same-tick: 400
+    min-break-gap-ms: 275
+    break-damage-tolerance-ms: 50
+    enforce-block-damage-time: true
 
 PacketOrderI:
     # enable if players are getting flagged for using 1.7 animations mods

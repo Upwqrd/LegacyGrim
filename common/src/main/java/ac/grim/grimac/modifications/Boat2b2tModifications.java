@@ -1,5 +1,6 @@
 package ac.grim.grimac.modifications;
 
+import ac.grim.grimac.api.config.ConfigManager;
 import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.collisions.CollisionData;
 import ac.grim.grimac.utils.collisions.datatypes.SimpleCollisionBox;
@@ -18,14 +19,25 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEn
  */
 public final class Boat2b2tModifications {
 
+    private static final String PREFIX = "Boat2b2t.";
+
+    public static boolean enabled = true;
     /** ~60 km/h at 20 TPS (16.6 m/s) — hard cap, no lenience on violations. */
-    public static final double MAX_HORIZONTAL_BLOCKS_PER_TICK = 0.83D;
+    public static double maxHorizontalBlocksPerTick = 0.83D;
     /** Vanilla-ish boat speed in air — above this without ground is fly. */
-    public static final double MAX_AIR_HORIZONTAL_BLOCKS_PER_TICK = 0.25D;
-    public static final double HIGH_SPEED_VEHICLE_DESYNC_LENIENCE_SQ = 9.0D;
-    private static final double AIR_SCAN_DEPTH = 2.0D;
+    public static double maxAirHorizontalBlocksPerTick = 0.25D;
+    public static double highSpeedVehicleDesyncLenienceSq = 9.0D;
+    public static double airScanDepth = 2.0D;
 
     private Boat2b2tModifications() {
+    }
+
+    public static void reload(ConfigManager config) {
+        enabled = config.getBooleanElse(PREFIX + "enabled", true);
+        maxHorizontalBlocksPerTick = config.getDoubleElse(PREFIX + "max-horizontal-blocks-per-tick", 0.83D);
+        maxAirHorizontalBlocksPerTick = config.getDoubleElse(PREFIX + "max-air-horizontal-blocks-per-tick", 0.25D);
+        highSpeedVehicleDesyncLenienceSq = config.getDoubleElse(PREFIX + "high-speed-desync-lenience-sq", 9.0D);
+        airScanDepth = Math.max(0.5D, config.getDoubleElse(PREFIX + "air-scan-depth", 2.0D));
     }
 
     public static boolean isControlledBoat(GrimPlayer player) {
@@ -39,7 +51,7 @@ public final class Boat2b2tModifications {
     }
 
     public static boolean isWithinAllowedBoatSpeed(double horizPerTick) {
-        return horizPerTick <= MAX_HORIZONTAL_BLOCKS_PER_TICK;
+        return horizPerTick <= maxHorizontalBlocksPerTick;
     }
 
     public static boolean hasSolidGroundBelow(GrimPlayer player) {
@@ -119,15 +131,15 @@ public final class Boat2b2tModifications {
         boolean onBlocks = hasSolidGroundBelowAt(player, packetPosition.getX(), packetPosition.getY(), packetPosition.getZ());
         boolean airBelow = hasOnlyAirBelowAt(player, packetPosition.getX(), packetPosition.getY(), packetPosition.getZ());
 
-        if (horizPerTick > MAX_HORIZONTAL_BLOCKS_PER_TICK) {
+        if (horizPerTick > maxHorizontalBlocksPerTick) {
             return BoatMoveVerdict.SPEED_EXCEEDED;
         }
 
-        if (airBelow && (dy > 0.0D || horizPerTick > MAX_AIR_HORIZONTAL_BLOCKS_PER_TICK)) {
+        if (airBelow && (dy > 0.0D || horizPerTick > maxAirHorizontalBlocksPerTick)) {
             return BoatMoveVerdict.FLY_VIOLATION;
         }
 
-        if (!onBlocks && horizPerTick > MAX_AIR_HORIZONTAL_BLOCKS_PER_TICK) {
+        if (!onBlocks && horizPerTick > maxAirHorizontalBlocksPerTick) {
             return BoatMoveVerdict.FLY_VIOLATION;
         }
 
@@ -235,7 +247,7 @@ public final class Boat2b2tModifications {
         double width = playerBox.maxX - playerBox.minX;
         SimpleCollisionBox scan = new SimpleCollisionBox(
                 x - width / 2,
-                entityY - AIR_SCAN_DEPTH,
+                entityY - airScanDepth,
                 z - width / 2,
                 x + width / 2,
                 entityY - 0.05D,
@@ -298,7 +310,7 @@ public final class Boat2b2tModifications {
         );
         double horizDelta = Math.max(0, horizActual - horizPredicted);
         offset = Math.max(0, offset - horizDelta);
-        offset = Math.max(0, offset - Math.sqrt(HIGH_SPEED_VEHICLE_DESYNC_LENIENCE_SQ));
+        offset = Math.max(0, offset - Math.sqrt(highSpeedVehicleDesyncLenienceSq));
         return offset;
     }
 
@@ -308,14 +320,14 @@ public final class Boat2b2tModifications {
         }
 
         double horiz = Math.hypot(player.actualMovement.getX(), player.actualMovement.getZ());
-        if (horiz > MAX_HORIZONTAL_BLOCKS_PER_TICK) {
+        if (horiz > maxHorizontalBlocksPerTick) {
             return true;
         }
 
         if (player.vehicleData.status == BoatEntityStatus.IN_AIR
                 && !hasSolidGroundBelow(player)
                 && hasOnlyAirBelow(player, player.y)
-                && (player.actualMovement.getY() > 0 || horiz > MAX_AIR_HORIZONTAL_BLOCKS_PER_TICK)) {
+                && (player.actualMovement.getY() > 0 || horiz > maxAirHorizontalBlocksPerTick)) {
             return true;
         }
 

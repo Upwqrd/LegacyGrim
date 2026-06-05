@@ -1,5 +1,6 @@
 package ac.grim.grimac.modifications;
 
+import ac.grim.grimac.api.config.ConfigManager;
 import ac.grim.grimac.player.GrimPlayer;
 
 /**
@@ -8,8 +9,15 @@ import ac.grim.grimac.player.GrimPlayer;
  */
 public final class Elytra2b2tModifications {
 
-    private static final float STEEP_DIVE_PITCH = 32f;
-    private static final double STEEP_DIVE_DELTA_Y = -0.1D;
+    private static final String PREFIX = "Elytra2b2t.";
+
+    private static float steepDivePitch = 32f;
+    private static double steepDiveDeltaY = -0.1D;
+
+    public static void reload(ConfigManager config) {
+        steepDivePitch = (float) config.getDoubleElse(PREFIX + "steep-dive-pitch", 32.0D);
+        steepDiveDeltaY = config.getDoubleElse(PREFIX + "steep-dive-delta-y", -0.1D);
+    }
 
     private Elytra2b2tModifications() {
     }
@@ -22,7 +30,7 @@ public final class Elytra2b2tModifications {
     }
 
     public static boolean isSteepVanillaDive(GrimPlayer player, double deltaY) {
-        return player.pitch >= STEEP_DIVE_PITCH && deltaY <= STEEP_DIVE_DELTA_Y;
+        return player.pitch >= steepDivePitch && deltaY <= steepDiveDeltaY;
     }
 
     /** Disabled — vanilla elytra only. */

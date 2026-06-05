@@ -13,7 +13,8 @@ public final class Movement2b2tModifications {
 
     public static int fireworkBoostGraceTicks = 55;
     public static int glideEndCoastTicks = 55;
-    private static final double STEEP_FALL_DELTA_Y = -0.1D;
+    private static double steepFallDeltaY = -0.1D;
+    private static double hardHorizontalFallLimit = 1.75D;
 
     private Movement2b2tModifications() {
     }
@@ -21,6 +22,8 @@ public final class Movement2b2tModifications {
     public static void reload(ConfigManager config) {
         fireworkBoostGraceTicks = Math.max(1, config.getIntElse(PREFIX + "firework-boost-grace-ticks", 55));
         glideEndCoastTicks = Math.max(1, config.getIntElse(PREFIX + "glide-end-coast-ticks", 55));
+        steepFallDeltaY = config.getDoubleElse(PREFIX + "steep-fall-delta-y", -0.1D);
+        hardHorizontalFallLimit = config.getDoubleElse(PREFIX + "hard-horizontal-fall-limit", 1.75D);
     }
 
     public static boolean hasActiveFireworkBoost(GrimPlayer player) {
@@ -101,7 +104,7 @@ public final class Movement2b2tModifications {
     }
 
     public static boolean isHighSpeedFallContext(GrimPlayer player, double deltaY) {
-        if (deltaY < STEEP_FALL_DELTA_Y) {
+        if (deltaY < steepFallDeltaY) {
             return true;
         }
         if (player.packetStateData.fallBufferTicks > 0) {
@@ -118,7 +121,7 @@ public final class Movement2b2tModifications {
 
     public static double getHardHorizontalLimit(GrimPlayer player, double deltaY) {
         if (isHighSpeedFallContext(player, deltaY)) {
-            return 1.75D;
+            return hardHorizontalFallLimit;
         }
         return Strafe2b2tModifications.getStrictStrafeCap();
     }

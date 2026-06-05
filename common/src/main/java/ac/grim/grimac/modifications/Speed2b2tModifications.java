@@ -30,7 +30,7 @@ public final class Speed2b2tModifications {
     /** Instant block (~39.6 km/h+). */
     public static double blatantBlocksPerTick = 0.55D;
     /** Sprint-jump burst only in air / takeoff (vanilla peak ~0.6–0.7). */
-    public static double jumpBurstMaxBlocksPerTick = Strafe2b2tModifications.VANILLA_BURST_HORIZONTAL_CAP;
+    public static double jumpBurstMaxBlocksPerTick = Strafe2b2tModifications.vanillaBurstHorizontalCap;
     public static int jumpBurstGraceTicks = 20;
 
     private Speed2b2tModifications() {
@@ -47,7 +47,7 @@ public final class Speed2b2tModifications {
         blatantBlocksPerTick = config.getDoubleElse(PREFIX + "blatant-blocks-per-tick", 0.55D);
         jumpBurstMaxBlocksPerTick = config.getDoubleElse(
                 PREFIX + "jump-burst-max-blocks-per-tick",
-                Strafe2b2tModifications.VANILLA_BURST_HORIZONTAL_CAP
+                Strafe2b2tModifications.vanillaBurstHorizontalCap
         );
         jumpBurstGraceTicks = Math.max(1, config.getIntElse(PREFIX + "jump-burst-grace-ticks", 20));
     }
@@ -115,16 +115,14 @@ public final class Speed2b2tModifications {
         if (packetHoriz > jumpBurstMaxBlocksPerTick) {
             return false;
         }
+        if (MovementLimits2b2tModifications.isInJumpSpeedGrace(player, deltaY, packetOnGround)) {
+            return true;
+        }
         if (packetOnGround) {
             return MovementLimits2b2tModifications.isJumpTakeoffMovement(player, deltaY, true);
         }
-        if (player.packetStateData.consecutiveAirTicks > jumpBurstGraceTicks
-                && player.packetStateData.ticksSinceOnGround > jumpBurstGraceTicks) {
-            return false;
-        }
         return MovementLimits2b2tModifications.isJumpTakeoffMovement(player, deltaY, false)
-                || player.packetStateData.airMomentumHorizLimit > maxSustainedBlocksPerTick
-                || player.packetStateData.consecutiveAirTicks <= jumpBurstGraceTicks;
+                || player.packetStateData.airMomentumHorizLimit > maxSustainedBlocksPerTick;
     }
 
     public static void tickSpeedBuffers(
@@ -194,14 +192,15 @@ public final class Speed2b2tModifications {
         ensureServerTickAligned(player);
         PacketStateData data = player.packetStateData;
 
-        if (isLegitSprintJumpBurst(player, deltaY, packetOnGround, packetHoriz)) {
+        if (MovementLimits2b2tModifications.isInJumpSpeedGrace(player, deltaY, packetOnGround)
+                || isLegitSprintJumpBurst(player, deltaY, packetOnGround, packetHoriz)) {
             if (MovementLimits2b2tModifications.isJumpTakeoffMovement(player, deltaY, packetOnGround)) {
                 data.speed2b2tTickStartX = fromX;
                 data.speed2b2tTickStartY = fromY;
                 data.speed2b2tTickStartZ = fromZ;
-                data.speed2b2tTickLocked = false;
                 data.hasSpeed2b2tTickStart = true;
             }
+            data.speed2b2tTickLocked = false;
             tickSpeedBuffers(player, packetOnGround, packetHoriz, deltaY);
             return false;
         }
@@ -213,9 +212,11 @@ public final class Speed2b2tModifications {
             return cancelSpeedPacket(player, event, "speed_locked", true);
         }
 
+        double tickCap = maxTickCumulativeBlocks;
+        double packetCap = maxPacketBlocksPerTick;
         boolean blatant = packetHoriz > blatantBlocksPerTick || tickHoriz > blatantBlocksPerTick;
-        boolean packetOver = packetHoriz > maxPacketBlocksPerTick;
-        boolean tickOver = tickHoriz > maxTickCumulativeBlocks;
+        boolean packetOver = packetHoriz > packetCap;
+        boolean tickOver = tickHoriz > tickCap;
 
         if (blatant || packetOver || tickOver) {
             data.speed2b2tTickLocked = true;

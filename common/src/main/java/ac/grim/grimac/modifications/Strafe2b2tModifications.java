@@ -1,5 +1,6 @@
 package ac.grim.grimac.modifications;
 
+import ac.grim.grimac.api.config.ConfigManager;
 import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.data.KnownInput;
 import ac.grim.grimac.utils.nmsutil.GetBoundingBox;
@@ -12,27 +13,43 @@ import com.github.retrooper.packetevents.util.Vector3d;
  */
 public final class Strafe2b2tModifications {
 
-    /** 28 km/h @ 20 TPS (7.77 m/s). */
-    public static final double MAX_STRAFE_HORIZONTAL_PER_TICK = 0.388D;
-    /** Tight tolerance — blocks ~40 km/h strafe multiplier cheats. */
-    public static final double STRICT_STRAFE_TOLERANCE = 0.02D;
-    /** Brief vanilla sprint-jump / bhop horizontal peak. */
-    public static final double VANILLA_BURST_HORIZONTAL_CAP = 0.72D;
-    public static final int JUMP_GRACE_AIR_TICKS = 18;
-    public static final int BUNNY_HOP_GROUND_GRACE_TICKS = 4;
-    public static final int MAX_AIR_STRAFE_EXPLOIT_TICKS = 50;
+    private static final String PREFIX = "Strafe2b2t.";
 
-    private static final double FALL_DELTA_Y_THRESHOLD = -0.02D;
-    private static final double JUMP_DELTA_Y_THRESHOLD = 0.035D;
-    private static final double HOVER_DELTA_Y_EPSILON = 0.006D;
-    private static final double ASCEND_DELTA_Y_MIN = 0.015D;
-    private static final double BLATANT_CHEAT_HORIZONTAL = 1.1D;
+    /** 28 km/h @ 20 TPS (7.77 m/s). */
+    public static double maxStrafeHorizontalPerTick = 0.388D;
+    /** Tight tolerance — blocks ~40 km/h strafe multiplier cheats. */
+    public static double strictStrafeTolerance = 0.02D;
+    /** Brief vanilla sprint-jump / bhop horizontal peak. */
+    public static double vanillaBurstHorizontalCap = 0.72D;
+    public static int jumpGraceAirTicks = 18;
+    public static int bunnyHopGroundGraceTicks = 4;
+    public static int maxAirStrafeExploitTicks = 50;
+
+    private static double fallDeltaYThreshold = -0.02D;
+    private static double jumpDeltaYThreshold = 0.035D;
+    private static double hoverDeltaYEpsilon = 0.006D;
+    private static double ascendDeltaYMin = 0.015D;
+    private static double blatantCheatHorizontal = 1.1D;
 
     private Strafe2b2tModifications() {
     }
 
+    public static void reload(ConfigManager config) {
+        maxStrafeHorizontalPerTick = config.getDoubleElse(PREFIX + "max-strafe-horizontal-per-tick", 0.388D);
+        strictStrafeTolerance = config.getDoubleElse(PREFIX + "strict-strafe-tolerance", 0.02D);
+        vanillaBurstHorizontalCap = config.getDoubleElse(PREFIX + "vanilla-burst-horizontal-cap", 0.72D);
+        jumpGraceAirTicks = Math.max(1, config.getIntElse(PREFIX + "jump-grace-air-ticks", 18));
+        bunnyHopGroundGraceTicks = Math.max(1, config.getIntElse(PREFIX + "bunny-hop-ground-grace-ticks", 4));
+        maxAirStrafeExploitTicks = Math.max(1, config.getIntElse(PREFIX + "max-air-strafe-exploit-ticks", 50));
+        fallDeltaYThreshold = config.getDoubleElse(PREFIX + "fall-delta-y-threshold", -0.02D);
+        jumpDeltaYThreshold = config.getDoubleElse(PREFIX + "jump-delta-y-threshold", 0.035D);
+        hoverDeltaYEpsilon = config.getDoubleElse(PREFIX + "hover-delta-y-epsilon", 0.006D);
+        ascendDeltaYMin = config.getDoubleElse(PREFIX + "ascend-delta-y-min", 0.015D);
+        blatantCheatHorizontal = config.getDoubleElse(PREFIX + "blatant-cheat-horizontal", 1.1D);
+    }
+
     public static double getStrictStrafeCap() {
-        return MAX_STRAFE_HORIZONTAL_PER_TICK + STRICT_STRAFE_TOLERANCE;
+        return maxStrafeHorizontalPerTick + strictStrafeTolerance;
     }
 
     public static boolean shouldEvaluateOnFoot(GrimPlayer player, boolean hasPosition, boolean isTeleport) {
@@ -90,19 +107,19 @@ public final class Strafe2b2tModifications {
 
     /** Called before pre-cancel so sprint-jump burst limits apply to the same packet. */
     public static void updateMovementBuffers(GrimPlayer player, boolean packetOnGround, double deltaY) {
-        if (deltaY < FALL_DELTA_Y_THRESHOLD) {
+        if (deltaY < fallDeltaYThreshold) {
             player.packetStateData.fallBufferTicks = 3;
         } else if (player.packetStateData.fallBufferTicks > 0) {
             player.packetStateData.fallBufferTicks--;
         }
 
         if (packetOnGround) {
-            boolean jumpTakeoff = deltaY > JUMP_DELTA_Y_THRESHOLD
+            boolean jumpTakeoff = deltaY > jumpDeltaYThreshold
                     || player.isJumping
                     || (player.packetStateData.knownInput != KnownInput.DEFAULT
                     && player.packetStateData.knownInput.jump());
             if (jumpTakeoff) {
-                player.packetStateData.airMomentumHorizLimit = VANILLA_BURST_HORIZONTAL_CAP;
+                player.packetStateData.airMomentumHorizLimit = vanillaBurstHorizontalCap;
                 player.packetStateData.wasOnGroundLastStrafeTick = true;
                 return;
             }
@@ -116,15 +133,15 @@ public final class Strafe2b2tModifications {
         player.packetStateData.consecutiveAirTicks++;
         player.packetStateData.ticksSinceOnGround++;
 
-        boolean jumpImpulse = deltaY > JUMP_DELTA_Y_THRESHOLD
+        boolean jumpImpulse = deltaY > jumpDeltaYThreshold
                 || player.packetStateData.knownInput.jump()
                 || player.clientVelocity.getY() > 0.06D
                 || player.isJumping;
 
         if ((player.packetStateData.wasOnGroundLastStrafeTick
-                || player.packetStateData.ticksSinceOnGround <= BUNNY_HOP_GROUND_GRACE_TICKS)
+                || player.packetStateData.ticksSinceOnGround <= bunnyHopGroundGraceTicks)
                 && jumpImpulse) {
-            player.packetStateData.airMomentumHorizLimit = VANILLA_BURST_HORIZONTAL_CAP;
+            player.packetStateData.airMomentumHorizLimit = vanillaBurstHorizontalCap;
         } else if (player.packetStateData.airMomentumHorizLimit > 0) {
             player.packetStateData.airMomentumHorizLimit *= 0.92D;
             if (player.packetStateData.airMomentumHorizLimit < getStrictStrafeCap()) {
@@ -139,22 +156,22 @@ public final class Strafe2b2tModifications {
         if (Movement2b2tModifications.isHighSpeedFallContext(player, deltaY)) {
             return true;
         }
-        if (player.packetStateData.consecutiveAirTicks > JUMP_GRACE_AIR_TICKS) {
+        if (player.packetStateData.consecutiveAirTicks > jumpGraceAirTicks) {
             return false;
         }
         return player.packetStateData.airMomentumHorizLimit > getStrictStrafeCap()
-                || player.packetStateData.ticksSinceOnGround <= BUNNY_HOP_GROUND_GRACE_TICKS;
+                || player.packetStateData.ticksSinceOnGround <= bunnyHopGroundGraceTicks;
     }
 
     private static double getActiveSpeedCap(GrimPlayer player, double deltaY) {
         if (isVanillaBurstExempt(player, deltaY)) {
-            return VANILLA_BURST_HORIZONTAL_CAP;
+            return vanillaBurstHorizontalCap;
         }
         return getStrictStrafeCap();
     }
 
     private static boolean exceedsStrictStrafeSpeed(GrimPlayer player, double horiz, double deltaY) {
-        if (horiz > BLATANT_CHEAT_HORIZONTAL) {
+        if (horiz > blatantCheatHorizontal) {
             return true;
         }
         return horiz > getActiveSpeedCap(player, deltaY);
@@ -178,20 +195,20 @@ public final class Strafe2b2tModifications {
         if (isVanillaBurstExempt(player, deltaY)) {
             return false;
         }
-        if (player.packetStateData.consecutiveAirTicks <= MAX_AIR_STRAFE_EXPLOIT_TICKS) {
+        if (player.packetStateData.consecutiveAirTicks <= maxAirStrafeExploitTicks) {
             return false;
         }
         if (player.packetStateData.fallBufferTicks > 0) {
             return false;
         }
-        if (horizPerTick < getStrictStrafeCap() * 0.8D || horizPerTick > BLATANT_CHEAT_HORIZONTAL) {
+        if (horizPerTick < getStrictStrafeCap() * 0.8D || horizPerTick > blatantCheatHorizontal) {
             return false;
         }
         if (hasLegitimateVerticalCause(player, deltaY)) {
             return false;
         }
-        boolean ascending = deltaY > ASCEND_DELTA_Y_MIN;
-        boolean hovering = Math.abs(deltaY) < HOVER_DELTA_Y_EPSILON;
+        boolean ascending = deltaY > ascendDeltaYMin;
+        boolean hovering = Math.abs(deltaY) < hoverDeltaYEpsilon;
         return ascending || hovering;
     }
 

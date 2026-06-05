@@ -137,6 +137,7 @@ public class GrimPlayer implements GrimUser {
     public boolean hasGravity = true;
     public final long joinTime = System.currentTimeMillis();
     public boolean playerEntityHasGravity = true;
+    public int lastInventorySwapTick = -7;
     public VectorData predictedVelocity = new VectorData(new Vector3dm(), VectorData.VectorType.Normal);
     public Vector3dm actualMovement = new Vector3dm();
     public Vector3d stuckSpeedMultiplier = DEFAULT_STUCK_SPEED;

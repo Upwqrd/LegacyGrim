@@ -68,7 +68,7 @@ public final class MovementLimits2b2tModifications {
     public static void reload(ConfigManager config) {
         enabled = config.getBooleanElse(PREFIX + "enabled", true);
         maxHorizontalPerTick = config.getDoubleElse(PREFIX + "max-horizontal-per-tick", KMH_30_BLOCKS_PER_TICK);
-        jumpFirstTicksHorizontalCap = config.getDoubleElse(PREFIX + "jump-first-ticks-horizontal-cap", 0.62D);
+        jumpFirstTicksHorizontalCap = config.getDoubleElse(PREFIX + "jump-first-ticks-horizontal-cap", 0.72D);
         jumpFirstTicksHorizontalGrace = Math.max(1, config.getIntElse(PREFIX + "jump-first-ticks-grace", 5));
         jumpAirHorizontalCap = config.getDoubleElse(PREFIX + "jump-air-horizontal-cap", JUMP_BURST_BLOCKS_PER_TICK);
         jumpAirHorizontalGraceTicks = Math.max(1, config.getIntElse(PREFIX + "jump-air-horizontal-grace-ticks", 20));
@@ -124,23 +124,18 @@ public final class MovementLimits2b2tModifications {
     }
 
     public static boolean isInJumpSpeedGrace(GrimPlayer player, double deltaY, boolean onGround) {
-        // Jump takeoff movement always grants grace
         if (isJumpTakeoffMovement(player, deltaY, onGround)) {
             return true;
         }
-        // Momentum exemption
         if (player.packetStateData.airMomentumHorizLimit > maxHorizontalPerTick + 0.01D) {
             return true;
         }
-        // Grace only if the jump started on the ground
-        if (player.isOnGround && deltaY > 0) {
-            // Allow up to 4 ticks in the air after leaving ground
-            return player.packetStateData.ticksSinceOnGround <= 4;
+        if (player.packetStateData.ticksSinceOnGround <= jumpAirHorizontalGraceTicks) {
+            return true;
         }
-        // Fallback: maintain previous short‑circuit for very early air ticks
-        if (!onGround) {
-            int projectedAirTick = player.packetStateData.ticksSinceOnGround + 1;
-            return projectedAirTick <= jumpAirHorizontalGraceTicks;
+        if (player.packetStateData.wasOnGroundLastStrafeTick
+                && player.packetStateData.ticksSinceOnGround <= Strafe2b2tModifications.bunnyHopGroundGraceTicks + 1) {
+            return true;
         }
         return false;
     }
@@ -322,7 +317,7 @@ public final class MovementLimits2b2tModifications {
      */
     public static double getPreCancelHorizontalLimit(GrimPlayer player, boolean packetOnGround, double deltaY) {
         if (isJumpTakeoffMovement(player, deltaY, packetOnGround)) {
-            return Strafe2b2tModifications.VANILLA_BURST_HORIZONTAL_CAP;
+            return Strafe2b2tModifications.vanillaBurstHorizontalCap;
         }
         if (player.packetStateData.airMomentumHorizLimit > preCancelHorizontalPerTick) {
             return player.packetStateData.airMomentumHorizLimit;
@@ -362,7 +357,7 @@ public final class MovementLimits2b2tModifications {
             return false;
         }
         if (isJumpTakeoffMovement(player, deltaY, packetOnGround)) {
-            return horiz > Strafe2b2tModifications.VANILLA_BURST_HORIZONTAL_CAP + AIR_SPEED_SLACK;
+            return horiz > Strafe2b2tModifications.vanillaBurstHorizontalCap + AIR_SPEED_SLACK;
         }
         return horiz > getPreCancelHorizontalLimit(player, packetOnGround, deltaY) + AIR_SPEED_SLACK;
     }
@@ -412,7 +407,7 @@ public final class MovementLimits2b2tModifications {
 
     public static boolean requiresInstantSpeedSetback(GrimPlayer player, double horiz, boolean onGround, double deltaY) {
         if (shouldSkipStrictSpeedEnforcement(player, horiz, deltaY, onGround)) {
-            return horiz > Strafe2b2tModifications.VANILLA_BURST_HORIZONTAL_CAP + AIR_SPEED_SLACK;
+            return horiz > Strafe2b2tModifications.vanillaBurstHorizontalCap + AIR_SPEED_SLACK;
         }
         return isBlatantHorizontalSpeed(horiz) || exceedsAllowedSpeed(player, horiz, onGround, deltaY);
     }
@@ -451,7 +446,7 @@ public final class MovementLimits2b2tModifications {
             return PacketMoveVerdict.ALLOW;
         }
         if (isInJumpSpeedGrace(player, deltaY, onGround)) {
-            if (horiz > Strafe2b2tModifications.VANILLA_BURST_HORIZONTAL_CAP + AIR_SPEED_SLACK) {
+            if (horiz > Strafe2b2tModifications.vanillaBurstHorizontalCap + AIR_SPEED_SLACK) {
                 return PacketMoveVerdict.SPEED_EXCEEDED;
             }
         } else if (isBlatantHorizontalSpeed(horiz) || exceedsAllowedSpeed(player, horiz, onGround, deltaY)) {
@@ -597,7 +592,7 @@ public final class MovementLimits2b2tModifications {
 
     public static double getAllowedHorizontalSpeed(GrimPlayer player, boolean onGround, double deltaY) {
         if (isJumpTakeoffMovement(player, deltaY, onGround)) {
-            return Strafe2b2tModifications.VANILLA_BURST_HORIZONTAL_CAP;
+            return Strafe2b2tModifications.vanillaBurstHorizontalCap;
         }
         if (player.packetStateData.airMomentumHorizLimit > maxHorizontalPerTick) {
             return player.packetStateData.airMomentumHorizLimit;
