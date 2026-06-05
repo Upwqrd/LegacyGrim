@@ -29,7 +29,7 @@ public final class MovementLimits2b2tModifications {
     /** Sustained ground / late-air cap (~30 km/h). */
     public static double maxHorizontalPerTick = KMH_30_BLOCKS_PER_TICK;
     public static final double JUMP_BURST_BLOCKS_PER_TICK = 11.0D / 20.0D;
-    public static double jumpFirstTicksHorizontalCap = JUMP_BURST_BLOCKS_PER_TICK;
+    public static double jumpFirstTicksHorizontalCap = 0.62D;
     public static int jumpFirstTicksHorizontalGrace = 5;
     public static double jumpAirHorizontalCap = JUMP_BURST_BLOCKS_PER_TICK;
     public static int jumpAirHorizontalGraceTicks = 20;
@@ -68,7 +68,7 @@ public final class MovementLimits2b2tModifications {
     public static void reload(ConfigManager config) {
         enabled = config.getBooleanElse(PREFIX + "enabled", true);
         maxHorizontalPerTick = config.getDoubleElse(PREFIX + "max-horizontal-per-tick", KMH_30_BLOCKS_PER_TICK);
-        jumpFirstTicksHorizontalCap = config.getDoubleElse(PREFIX + "jump-first-ticks-horizontal-cap", JUMP_BURST_BLOCKS_PER_TICK);
+        jumpFirstTicksHorizontalCap = config.getDoubleElse(PREFIX + "jump-first-ticks-horizontal-cap", 0.62D);
         jumpFirstTicksHorizontalGrace = Math.max(1, config.getIntElse(PREFIX + "jump-first-ticks-grace", 5));
         jumpAirHorizontalCap = config.getDoubleElse(PREFIX + "jump-air-horizontal-cap", JUMP_BURST_BLOCKS_PER_TICK);
         jumpAirHorizontalGraceTicks = Math.max(1, config.getIntElse(PREFIX + "jump-air-horizontal-grace-ticks", 20));
@@ -124,21 +124,25 @@ public final class MovementLimits2b2tModifications {
     }
 
     public static boolean isInJumpSpeedGrace(GrimPlayer player, double deltaY, boolean onGround) {
+        // Jump takeoff movement always grants grace
         if (isJumpTakeoffMovement(player, deltaY, onGround)) {
             return true;
         }
+        // Momentum exemption
         if (player.packetStateData.airMomentumHorizLimit > maxHorizontalPerTick + 0.01D) {
             return true;
         }
-        if (player.packetStateData.consecutiveAirTicks > 0
-                && player.packetStateData.consecutiveAirTicks <= Strafe2b2tModifications.JUMP_GRACE_AIR_TICKS) {
-            return true;
+        // Grace only if the jump started on the ground
+        if (player.isOnGround && deltaY > 0) {
+            // Allow up to 4 ticks in the air after leaving ground
+            return player.packetStateData.ticksSinceOnGround <= 4;
         }
+        // Fallback: maintain previous short‑circuit for very early air ticks
         if (!onGround) {
             int projectedAirTick = player.packetStateData.ticksSinceOnGround + 1;
             return projectedAirTick <= jumpAirHorizontalGraceTicks;
         }
-        return player.packetStateData.wasOnGroundLastStrafeTick && hasJumpPacket(player);
+        return false;
     }
 
     /** Vanilla sprint / walk on ground — below hard barrier and 30 km/h cap. */
@@ -499,6 +503,11 @@ public final class MovementLimits2b2tModifications {
         if (player.packetStateData.fallBufferTicks > 0) {
             return true;
         }
+        // Use inventory swap tick tracking to allow a 7‑tick grace after swapping chestplate/elytra
+        int currentTick = GrimAPI.INSTANCE.getTickManager().currentTick;
+        if (currentTick - player.lastInventorySwapTick <= 7 && deltaY > 0) {
+            return true;
+        }
         if (player.packetStateData.ticksSinceOnGround <= NATURAL_JUMP_ARC_TICKS) {
             return true;
         }
@@ -637,5 +646,90 @@ public final class MovementLimits2b2tModifications {
         Strafe2b2tModifications.rollbackOnFoot(player, x, y, z);
         hardStopHorizontalMovement(player);
     }
-}
 
+    private static void ensureVerticalTickAligned(GrimPlayer player, double fromX, double fromY, double fromZ) {
+        int tick = GrimAPI.INSTANCE.getTickManager().currentTick;
+        if (player.packetStateData.verticalTickId != tick) {
+            player.packetStateData.verticalTickId = tick;
+            player.packetStateData.verticalDistanceThisTick = 0.0;
+            player.packetStateData.verticalTickStartX = fromX;
+            player.packetStateData.verticalTickStartY = fromY;
+            player.packetStateData.verticalTickStartZ = fromZ;
+            player.packetStateData.verticalTickStartYaw = player.yaw;
+            player.packetStateData.verticalTickStartPitch = player.pitch;
+            player.packetStateData.hasVerticalTickStart = true;
+        }
+    }
+
+    public static void forceSetbackToVerticalTickStart(GrimPlayer player) {
+        PacketStateData data = player.packetStateData;
+        if (data.hasVerticalTickStart) {
+            Strafe2b2tModifications.rollbackToExactPosition(
+                    player,
+                    data.verticalTickStartX,
+                    data.verticalTickStartY,
+                    data.verticalTickStartZ,
+                    data.verticalTickStartYaw,
+                    data.verticalTickStartPitch
+            );
+            return;
+        }
+        Strafe2b2tModifications.rollbackToExactPosition(
+                player,
+                player.lastX,
+                player.lastY,
+                player.lastZ,
+                player.yaw,
+                player.pitch
+        );
+    }
+
+    public static boolean tryBlockVerticalSpeedPacket(
+            GrimPlayer player,
+            double fromX,
+            double fromY,
+            double fromZ,
+            Vector3d packetPosition,
+            boolean packetOnGround,
+            PacketReceiveEvent event
+    ) {
+        if (!enabled) {
+            return false;
+        }
+        if (hasMovementExempt(player)) {
+            return false;
+        }
+
+        double deltaY = packetPosition.getY() - fromY;
+        if (deltaY <= 0) {
+            return false;
+        }
+
+        ensureVerticalTickAligned(player, fromX, fromY, fromZ);
+        PacketStateData data = player.packetStateData;
+        data.verticalDistanceThisTick += deltaY;
+
+        double maxYDelta = 0.57D;
+        if (isJumpTakeoffMovement(player, deltaY, packetOnGround)) {
+            maxYDelta = 0.60D;
+        }
+
+        final java.util.OptionalInt jumpBoost = player.compensatedEntities.getPotionLevelForPlayer(PotionTypes.JUMP_BOOST);
+        if (jumpBoost.isPresent()) {
+            maxYDelta += 0.1D * jumpBoost.getAsInt();
+        }
+
+        if (data.verticalDistanceThisTick > maxYDelta) {
+            StrafeLimits2b2t limits = player.checkManager.getPostPredictionCheck(StrafeLimits2b2t.class);
+            if (limits != null) {
+                limits.flagAndAlert("high_jump dy_sum=" + String.format("%.3f", data.verticalDistanceThisTick) + " max=" + String.format("%.3f", maxYDelta));
+            }
+            // After vertical overflow, also clear horizontal speed tick start to avoid stale horizontal accumulation
+            data.speed2b2tTickStartX = data.speed2b2tTickStartY = data.speed2b2tTickStartZ = 0.0D;
+            data.speed2b2tTickStartYaw = data.speed2b2tTickStartPitch = 0.0F;
+            data.hasSpeed2b2tTickStart = false;
+        }
+
+        return false;
+    }
+}

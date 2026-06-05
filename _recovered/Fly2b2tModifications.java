@@ -2,11 +2,9 @@ package ac.grim.grimac.modifications;
 
 import ac.grim.grimac.api.config.ConfigManager;
 import ac.grim.grimac.player.GrimPlayer;
+import ac.grim.grimac.utils.nmsutil.GetBoundingBox;
 import com.github.retrooper.packetevents.protocol.player.GameMode;
 import com.github.retrooper.packetevents.protocol.potion.PotionTypes;
-import ac.grim.grimac.modifications.Strafe2b2tModifications;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityVelocity;
-import com.github.retrooper.packetevents.util.Vector3d;
 
 /**
  * 2b2t.org.ru fork: strict survival vertical limits (Flight / HighJump).
@@ -16,8 +14,7 @@ public final class Fly2b2tModifications {
 
     private static final String PREFIX = "Fly2b2t.";
 
-    public static boolean enabled = false;
-    public static int jumpGraceAirTicks = 20;
+    public static int jumpGraceAirTicks = 8;
     public static int maxHoverAirTicks = 3;
     public static int maxAscendAirTicks = 2;
     public static double hoverDeltaYEpsilon = 0.006D;
@@ -25,16 +22,15 @@ public final class Fly2b2tModifications {
     public static double blatantAscendDeltaY = 0.075D;
     public static double maxAirAscendPerTick = 0.42D;
     public static double maxBoostAirAscendPerTick = 0.56D;
-    public static double minMomentumHorizForElytraExempt = 0.15D;
-    public static double minMomentumDyForElytraExempt = 0.12D;
+    public static double minMomentumHorizForElytraExempt = 0.08D;
+    public static double minMomentumDyForElytraExempt = 0.06D;
     public static int maxSlowFallAirTicks = 22;
 
     private Fly2b2tModifications() {
     }
 
     public static void reload(ConfigManager config) {
-        enabled = config.getBooleanElse(PREFIX + "enabled", false);
-        jumpGraceAirTicks = Math.max(0, config.getIntElse(PREFIX + "jump-grace-air-ticks", 20));
+        jumpGraceAirTicks = Math.max(0, config.getIntElse(PREFIX + "jump-grace-air-ticks", 8));
         maxHoverAirTicks = Math.max(1, config.getIntElse(PREFIX + "max-hover-air-ticks", 3));
         maxAscendAirTicks = Math.max(1, config.getIntElse(PREFIX + "max-ascend-air-ticks", 2));
         hoverDeltaYEpsilon = config.getDoubleElse(PREFIX + "hover-delta-y-epsilon", 0.006D);
@@ -81,13 +77,11 @@ public final class Fly2b2tModifications {
 
     public static void tickFlyBuffers(GrimPlayer player, boolean packetOnGround, double deltaY) {
         if (packetOnGround) {
-            if (!MovementLimits2b2tModifications.isJumpTakeoffMovement(player, deltaY, true)) {
-                player.packetStateData.consecutiveAirTicks = 0;
-                player.packetStateData.ticksSinceOnGround = 0;
-                player.packetStateData.consecutiveHoverAirTicks = 0;
-                player.packetStateData.consecutiveAscendAirTicks = 0;
-                player.packetStateData.consecutiveStrictAirAscendTicks = 0;
-            }
+            player.packetStateData.consecutiveAirTicks = 0;
+            player.packetStateData.ticksSinceOnGround = 0;
+            player.packetStateData.consecutiveHoverAirTicks = 0;
+            player.packetStateData.consecutiveAscendAirTicks = 0;
+            player.packetStateData.consecutiveStrictAirAscendTicks = 0;
             return;
         }
 
@@ -139,22 +133,6 @@ public final class Fly2b2tModifications {
         if (player.packetStateData.fallBufferTicks > 0) {
             return true;
         }
-        if (MovementLimits2b2tModifications.isLegitOnFootAirMovement(player, deltaY, false)) {
-            return true;
-        }
-        if (MovementLimits2b2tModifications.isInJumpSpeedGrace(player, deltaY, false)) {
-            return true;
-        }
-        if (player.isJumping || player.clientVelocity.getY() > 0.08D) {
-            return true;
-        }
-        // New: Exempt the moments when elytra is being equipped or unequipped (glide start/stop)
-        if (player.wasGliding && !player.isGliding) {
-            return true;
-        }
-        if (!player.wasGliding && player.isGliding) {
-            return true;
-        }
         return false;
     }
 
@@ -185,9 +163,6 @@ public final class Fly2b2tModifications {
             double deltaY,
             double horizPerTick
     ) {
-        if (!enabled) {
-            return false;
-        }
         if (!player.packetStateData.didLastMovementIncludePosition) {
             return false;
         }
@@ -198,10 +173,8 @@ public final class Fly2b2tModifications {
             return false;
         }
 
-        // After applying buffers, enforce a strict vertical ascent limit.
-        if (deltaY > getMaxAllowedAirAscend(player)) {
-            return true;
-        }
+        tickFlyBuffers(player, packetOnGround, deltaY);
+
         if (!hasLegitFlightExempt(player, deltaY, horizPerTick)) {
             if (shouldBlockHighJump(player, packetOnGround, deltaY, horizPerTick)) {
                 return true;
@@ -237,14 +210,20 @@ public final class Fly2b2tModifications {
     }
 
     public static void rollbackFlight(GrimPlayer player, double x, double y, double z) {
-        // Use Strafe rollback and also zero vertical velocity, sending a packet to client.
-        Strafe2b2tModifications.rollbackToExactPosition(player, x, y, z, player.yaw, player.pitch);
-        // Ensure velocity is cleared and client receives zero velocity packet.
+        player.clientVelocity.setX(0);
         player.clientVelocity.setY(0);
-        if (player.user != null) {
-            player.user.writePacket(new WrapperPlayServerEntityVelocity(player.entityID,
-                    new Vector3d(0, 0, 0)));
-        }
+        player.clientVelocity.setZ(0);
+        player.lastX = x;
+        player.lastY = y;
+        player.lastZ = z;
+        player.x = x;
+        player.y = y;
+        player.z = z;
+        player.boundingBox = GetBoundingBox.getCollisionBoxForPlayer(player, x, y, z);
+        player.packetStateData.consecutiveHoverAirTicks = 0;
+        player.packetStateData.consecutiveAscendAirTicks = 0;
+        player.packetStateData.consecutiveStrictAirAscendTicks = 0;
+        player.getSetbackTeleportUtil().executeNonSimulatingForceResync();
     }
 
     public static String formatVerdict(double horiz, double deltaY, int airTicks) {

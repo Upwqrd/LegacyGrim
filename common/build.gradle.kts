@@ -61,8 +61,8 @@ dependencies {
     api(libs.jetbrains.annotations)
     api(libs.hikaricp)
 
-    api(libs.grim.api)
-    api(libs.grim.internal)
+    implementation(libs.grim.api)
+    implementation(libs.grim.internal)
     compileOnly(libs.grim.internal.shims)
 
     compileOnly(libs.geyser.base.api) {

@@ -763,6 +763,10 @@ public class CheckManagerListener extends PacketListenerAbstract {
                         player, player.x, player.y, player.z, clampVector, onGround, event)) {
                     return;
                 }
+                if (ac.grim.grimac.modifications.MovementLimits2b2tModifications.tryBlockVerticalSpeedPacket(
+                        player, player.x, player.y, player.z, clampVector, onGround, event)) {
+                    return;
+                }
                 if (ac.grim.grimac.modifications.Step2b2tModifications.tryBlockStepPacket(
                         player, clampVector, onGround, event)) {
                     return;

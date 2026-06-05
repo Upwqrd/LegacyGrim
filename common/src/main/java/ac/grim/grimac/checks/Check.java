@@ -41,6 +41,10 @@ public class Check extends GrimProcessor implements AbstractCheck {
     private boolean exemptPermission;
     private boolean noSetbackPermission;
     private boolean noModifyPacketPermission;
+    // Custom exemption for 2b2t modifications
+    private boolean customExempt;
+    protected boolean flightExempt;
+
     private long lastViolationTime;
 
     public Check(final @NotNull GrimPlayer player) {
@@ -73,6 +77,9 @@ public class Check extends GrimProcessor implements AbstractCheck {
     }
 
     public final void updatePermissions() {
+        // Reset custom exemption each time permissions reload
+        this.customExempt = false;
+        this.flightExempt = false;
         if (configName == null || player.platformPlayer == null) return;
         final String id = configName.toLowerCase();
         exemptPermission = player.platformPlayer.hasPermission("grim.exempt." + id);
@@ -97,7 +104,7 @@ public class Check extends GrimProcessor implements AbstractCheck {
     }
 
     public final boolean flag(String verbose) {
-        if (player.disableGrim || (experimental && !player.isExperimentalChecks()) || exemptPermission)
+        if (player.disableGrim || (experimental && !player.isExperimentalChecks()) || exemptPermission || customExempt || flightExempt)
             return false; // Avoid calling event if disabled
 
         if (FLAG_CHANNEL.fire(player, this, verbose)) return false;

@@ -16,11 +16,20 @@ public class FlyLimits2b2t extends Check implements PostPredictionCheck {
         super(player);
     }
 
-    public void flagAndRollback(double horiz, double deltaY) {
-        if (flagAndAlert(Fly2b2tModifications.formatVerdict(horiz, deltaY, player.packetStateData.consecutiveAirTicks))) {
-            if (!isNoSetbackPermission()) {
-                Fly2b2tModifications.rollbackFlight(player, player.lastX, player.lastY, player.lastZ);
-            }
+        public void flagAndRollback(double horiz, double deltaY) {
+        // Exempt FlightA check for this packet as we are handling the violation here
+        // Retrieve FlightA check instance and set its exemption flag
+        ac.grim.grimac.checks.impl.flight.FlightA flightCheck = (ac.grim.grimac.checks.impl.flight.FlightA) player.checkManager.getCheck(ac.grim.grimac.checks.impl.flight.FlightA.class);
+        if (flightCheck != null) {
+            flightCheck.setFlightExempt(true);
+        }
+        // Perform rollback similar to speedlimits2b2t behavior
+        if (!isNoSetbackPermission()) {
+            Fly2b2tModifications.rollbackFlight(player, player.lastX, player.lastY, player.lastZ);
+        }
+        // Reset exemption flag to avoid affecting subsequent packets
+        if (flightCheck != null) {
+            flightCheck.setFlightExempt(false);
         }
     }
 

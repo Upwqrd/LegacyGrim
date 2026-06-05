@@ -26,7 +26,7 @@ public final class Speed2b2tModifications {
     /** Single packet cap (30 km/h + micro gap). */
     public static double maxPacketBlocksPerTick = 0.435D;
     /** Max horizontal travel from tick start (anti lag-split). */
-    public static double maxTickCumulativeBlocks = 0.435D;
+    public static double maxTickCumulativeBlocks = 0.65D;
     /** Instant block (~39.6 km/h+). */
     public static double blatantBlocksPerTick = 0.55D;
     /** Sprint-jump burst only in air / takeoff (vanilla peak ~0.6–0.7). */
@@ -43,7 +43,7 @@ public final class Speed2b2tModifications {
                 MovementLimits2b2tModifications.KMH_30_BLOCKS_PER_TICK
         );
         maxPacketBlocksPerTick = config.getDoubleElse(PREFIX + "max-packet-blocks-per-tick", 0.435D);
-        maxTickCumulativeBlocks = config.getDoubleElse(PREFIX + "max-tick-cumulative-blocks", 0.435D);
+        maxTickCumulativeBlocks = config.getDoubleElse(PREFIX + "max-tick-cumulative-blocks", 0.65D);
         blatantBlocksPerTick = config.getDoubleElse(PREFIX + "blatant-blocks-per-tick", 0.55D);
         jumpBurstMaxBlocksPerTick = config.getDoubleElse(
                 PREFIX + "jump-burst-max-blocks-per-tick",

@@ -12,10 +12,21 @@ public class FlightA extends Check implements PacketCheck {
         super(player);
     }
 
+    // Setter for flight exemption used by custom checks
+    public void setFlightExempt(boolean exempt) {
+        this.flightExempt = exempt;
+    }
+
+
+
     @Override
     public void onPacketReceive(PacketReceiveEvent event) {
         // If the player sends a flying packet, but they aren't flying, then they are cheating.
         if (WrapperPlayClientPlayerFlying.isFlying(event.getPacketType()) && !player.isFlying) {
+            // Respect flight exemption flag
+            if (flightExempt) {
+                return;
+            }
             flag();
         }
     }

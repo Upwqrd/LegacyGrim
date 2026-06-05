@@ -1,12 +1,14 @@
 package ac.grim.grimac.modifications;
 
 import ac.grim.grimac.player.GrimPlayer;
+import ac.grim.grimac.predictionengine.predictions.rideable.PredictionEngineBoat;
 import ac.grim.grimac.utils.collisions.CollisionData;
 import ac.grim.grimac.utils.collisions.datatypes.SimpleCollisionBox;
 import ac.grim.grimac.utils.data.TrackerData;
 import ac.grim.grimac.utils.data.packetentity.PacketEntity;
 import ac.grim.grimac.utils.enums.BoatEntityStatus;
 import ac.grim.grimac.utils.math.GrimMath;
+import ac.grim.grimac.utils.math.Vector3dm;
 import ac.grim.grimac.utils.nmsutil.GetBoundingBox;
 import com.github.retrooper.packetevents.protocol.world.states.WrappedBlockState;
 import com.github.retrooper.packetevents.protocol.world.states.type.StateTypes;

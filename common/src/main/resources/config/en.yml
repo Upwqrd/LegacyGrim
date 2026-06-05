@@ -176,7 +176,7 @@ Movement2b2t:
 MovementLimits2b2t:
     enabled: true
     max-horizontal-per-tick: 0.417
-    jump-first-ticks-horizontal-cap: 0.72
+    jump-first-ticks-horizontal-cap: 0.62
     jump-first-ticks-grace: 5
     jump-air-horizontal-cap: 0.72
     jump-air-horizontal-grace-ticks: 20
@@ -201,7 +201,7 @@ Speed2b2t:
     enabled: true
     max-sustained-blocks-per-tick: 0.417
     max-packet-blocks-per-tick: 0.435
-    max-tick-cumulative-blocks: 0.45
+    max-tick-cumulative-blocks: 0.65
     blatant-blocks-per-tick: 0.55
     jump-burst-max-blocks-per-tick: 0.72
     jump-burst-grace-ticks: 20

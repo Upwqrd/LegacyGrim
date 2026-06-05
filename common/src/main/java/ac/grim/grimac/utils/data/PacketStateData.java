@@ -95,6 +95,16 @@ public class PacketStateData {
     public boolean hasStepAscendAnchorY = false;
     public double stepAscendAnchorY;
 
+    /** HighJump2b2t: vertical packet limit per tick. */
+    public int verticalTickId = Integer.MIN_VALUE;
+    public double verticalDistanceThisTick = 0.0;
+    public boolean hasVerticalTickStart = false;
+    public double verticalTickStartX;
+    public double verticalTickStartY;
+    public double verticalTickStartZ;
+    public float verticalTickStartYaw;
+    public float verticalTickStartPitch;
+
     public void setSlowedByUsingItem(boolean slowedByUsingItem) {
         slowedByUsingItemSlot = slowedByUsingItem ? lastSlotSelected : Integer.MIN_VALUE;
     }

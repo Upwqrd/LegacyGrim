@@ -2,6 +2,7 @@ package ac.grim.grimac.utils.latency;
 
 import ac.grim.grimac.checks.Check;
 import ac.grim.grimac.checks.type.PacketCheck;
+import ac.grim.grimac.GrimAPI;
 import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.update.BlockPlace;
 import ac.grim.grimac.utils.inventory.EquipmentType;
@@ -240,6 +241,10 @@ public class CompensatedInventory extends Check implements PacketCheck {
                 // Equipment slot
                 inventory.getInventoryStorage().handleClientClaimedSlotSet(slot);
                 inventory.getInventoryStorage().setItem(slot, use);
+                // Record inventory swap tick for Elytra exemption logic
+                player.lastInventorySwapTick = GrimAPI.INSTANCE.getTickManager().currentTick;
+                // Record inventory swap tick for Elytra exemption logic
+                player.lastInventorySwapTick = GrimAPI.INSTANCE.getTickManager().currentTick;
             }
         } else if (event.getPacketType() == PacketType.Play.Client.PLAYER_DIGGING) {
             WrapperPlayClientPlayerDigging dig = new WrapperPlayClientPlayerDigging(event);
