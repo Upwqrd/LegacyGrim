@@ -5,6 +5,7 @@ import ac.grim.grimac.modifications.Boat2b2tModifications;
 import ac.grim.grimac.modifications.BoatMoveVerdict;
 import ac.grim.grimac.modifications.Movement2b2tModifications;
 import ac.grim.grimac.modifications.MovementLimits2b2tModifications;
+import ac.grim.grimac.modifications.Spider2b2tModifications;
 import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.update.*;
 import ac.grim.grimac.utils.blockplace.BlockPlaceResult;
@@ -759,12 +760,19 @@ public class CheckManagerListener extends PacketListenerAbstract {
             if (!player.inVehicle() && !player.packetStateData.lastPacketWasOnePointSeventeenDuplicate) {
                 double packetDeltaY = clampVector.getY() - player.y;
                 MovementLimits2b2tModifications.updatePacketStateBeforeMove(player, onGround, packetDeltaY);
+                double packetHoriz = Math.hypot(clampVector.getX() - player.x, clampVector.getZ() - player.z);
+                Spider2b2tModifications.trackWallClimbForPacket(
+                        player, packetDeltaY, onGround, player.y, clampVector.getY(), packetHoriz);
                 if (ac.grim.grimac.modifications.Speed2b2tModifications.tryBlockSpeedPacket(
                         player, player.x, player.y, player.z, clampVector, onGround, event)) {
                     return;
                 }
                 if (ac.grim.grimac.modifications.MovementLimits2b2tModifications.tryBlockVerticalSpeedPacket(
                         player, player.x, player.y, player.z, clampVector, onGround, event)) {
+                    return;
+                }
+                if (ac.grim.grimac.modifications.Spider2b2tModifications.tryBlockSpiderPacket(
+                        player, clampVector, onGround, event)) {
                     return;
                 }
                 if (ac.grim.grimac.modifications.Step2b2tModifications.tryBlockStepPacket(

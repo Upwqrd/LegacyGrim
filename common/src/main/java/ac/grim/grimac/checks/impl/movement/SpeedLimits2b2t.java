@@ -40,8 +40,31 @@ public class SpeedLimits2b2t extends Check implements PostPredictionCheck {
             return;
         }
 
+        if (Speed2b2tModifications.hasSpeedExempt(player)) {
+            Speed2b2tModifications.clearJumpArcAnchor(player);
+            reward();
+            return;
+        }
+
         double horiz = MovementLimits2b2tModifications.resolvePacketHorizontalSpeed(player);
         double deltaY = player.actualMovement.getY();
+
+        if (Speed2b2tModifications.shouldBlockLongJumpPost(player, horiz, deltaY, player.onGround)) {
+            String reason = Speed2b2tModifications.evaluateLongJumpBlock(
+                    player,
+                    player.lastX,
+                    player.lastZ,
+                    player.x,
+                    player.z,
+                    horiz,
+                    deltaY,
+                    player.onGround
+            );
+            if (reason != null && flagAndAlert(reason) && !isNoSetbackPermission()) {
+                Speed2b2tModifications.rollbackSpeed(player);
+            }
+            return;
+        }
 
         if (!Speed2b2tModifications.shouldBlockSustainedSpeed(player, player.onGround, deltaY, horiz)) {
             reward();

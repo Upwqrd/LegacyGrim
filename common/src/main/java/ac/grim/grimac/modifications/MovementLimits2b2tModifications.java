@@ -504,9 +504,15 @@ public final class MovementLimits2b2tModifications {
             return true;
         }
         if (player.packetStateData.ticksSinceOnGround <= NATURAL_JUMP_ARC_TICKS) {
+            if (Spider2b2tModifications.isSlowWallClimbPattern(player, deltaY)) {
+                return false;
+            }
             return true;
         }
         if (deltaY < 0.15D) {
+            if (Spider2b2tModifications.isSlowWallClimbPattern(player, deltaY)) {
+                return false;
+            }
             return true;
         }
         if (Step2b2tModifications.isLegitStepTick(player, deltaY,

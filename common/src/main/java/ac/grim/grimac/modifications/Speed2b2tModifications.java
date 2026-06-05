@@ -32,6 +32,11 @@ public final class Speed2b2tModifications {
     /** Sprint-jump burst only in air / takeoff (vanilla peak ~0.6–0.7). */
     public static double jumpBurstMaxBlocksPerTick = Strafe2b2tModifications.vanillaBurstHorizontalCap;
     public static int jumpBurstGraceTicks = 20;
+    /** Max horizontal travel from jump takeoff (Meteor LongJump caps). */
+    public static double maxLongJumpArcBlocks = 10.0D;
+    /** Per-packet horiz during jump arc — vanilla sprint peak ~0.72, Meteor vanilla ~1.26. */
+    public static double maxLongJumpHorizPerTick = 0.85D;
+    private static final double POSITION_SYNC_HORIZ = 12.0D;
 
     private Speed2b2tModifications() {
     }
@@ -50,6 +55,135 @@ public final class Speed2b2tModifications {
                 Strafe2b2tModifications.vanillaBurstHorizontalCap
         );
         jumpBurstGraceTicks = Math.max(1, config.getIntElse(PREFIX + "jump-burst-grace-ticks", 20));
+        maxLongJumpArcBlocks = config.getDoubleElse(PREFIX + "max-long-jump-arc-blocks", 10.0D);
+        maxLongJumpHorizPerTick = config.getDoubleElse(PREFIX + "max-long-jump-horiz-per-tick", 0.85D);
+    }
+
+    public static void clearJumpArcAnchor(GrimPlayer player) {
+        player.packetStateData.hasJumpArcAnchor = false;
+    }
+
+    /**
+     * LongJump arc is for sprint-jump cheats only — not elytra/firework/chestplate-swap momentum.
+     */
+    public static boolean isLongJumpExempt(GrimPlayer player, double deltaY, boolean packetOnGround, double horiz) {
+        if (hasSpeedExempt(player)) {
+            return true;
+        }
+        if (player.isGliding || player.wasGliding) {
+            return true;
+        }
+        int currentTick = GrimAPI.INSTANCE.getTickManager().currentTick;
+        if (currentTick - player.lastInventorySwapTick <= 7 && deltaY > 0) {
+            return true;
+        }
+        if (Movement2b2tModifications.hasGlideEndCoast(player)
+                || Movement2b2tModifications.hasFireworkBoostGrace(player)
+                || Movement2b2tModifications.hasActiveFireworkBoost(player)) {
+            return true;
+        }
+        if (Fly2b2tModifications.shouldExemptElytraFireworkMomentum(player, deltaY, horiz)) {
+            return true;
+        }
+        if (player.packetStateData.airMomentumHorizLimit > maxLongJumpHorizPerTick + 0.05D) {
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean isLegitJumpArcTakeoff(GrimPlayer player, double deltaY, boolean packetOnGround) {
+        if (!MovementLimits2b2tModifications.isJumpTakeoffMovement(player, deltaY, packetOnGround)) {
+            return false;
+        }
+        if (isLongJumpExempt(player, deltaY, packetOnGround, 0)) {
+            return false;
+        }
+        return MovementLimits2b2tModifications.hasJumpPacket(player)
+                || player.packetStateData.wasOnGroundLastStrafeTick
+                || packetOnGround;
+    }
+
+    /**
+     * Tracks jump arc from takeoff and blocks Meteor LongJump-style bursts inside jump grace.
+     *
+     * @return verbose reason if blocked, or null if allowed
+     */
+    public static String evaluateLongJumpBlock(
+            GrimPlayer player,
+            double fromX,
+            double fromZ,
+            double toX,
+            double toZ,
+            double packetHoriz,
+            double deltaY,
+            boolean packetOnGround
+    ) {
+        if (packetHoriz > POSITION_SYNC_HORIZ
+                || player.packetStateData.lastPacketWasTeleport
+                || player.packetStateData.pearlPhaseGraceTicks > 0) {
+            clearJumpArcAnchor(player);
+            return null;
+        }
+
+        if (isLongJumpExempt(player, deltaY, packetOnGround, packetHoriz)) {
+            clearJumpArcAnchor(player);
+            return null;
+        }
+
+        PacketStateData data = player.packetStateData;
+        boolean takeoff = isLegitJumpArcTakeoff(player, deltaY, packetOnGround);
+
+        if (packetOnGround && !takeoff) {
+            clearJumpArcAnchor(player);
+            return null;
+        }
+
+        if (takeoff) {
+            data.hasJumpArcAnchor = true;
+            data.jumpArcAnchorX = fromX;
+            data.jumpArcAnchorZ = fromZ;
+        }
+
+        if (!data.hasJumpArcAnchor) {
+            return null;
+        }
+
+        if (!MovementLimits2b2tModifications.isInJumpSpeedGrace(player, deltaY, packetOnGround)
+                && player.packetStateData.ticksSinceOnGround > jumpBurstGraceTicks) {
+            clearJumpArcAnchor(player);
+            return null;
+        }
+
+        if (packetHoriz > maxLongJumpHorizPerTick) {
+            return "long_jump_per_tick h=" + String.format("%.3f", packetHoriz)
+                    + " max=" + String.format("%.3f", maxLongJumpHorizPerTick);
+        }
+
+        double arcHoriz = Math.hypot(toX - data.jumpArcAnchorX, toZ - data.jumpArcAnchorZ);
+        if (arcHoriz > maxLongJumpArcBlocks) {
+            return "long_jump_arc h=" + String.format("%.3f", arcHoriz)
+                    + " max=" + String.format("%.3f", maxLongJumpArcBlocks);
+        }
+
+        return null;
+    }
+
+    public static boolean shouldBlockLongJumpPost(
+            GrimPlayer player,
+            double horiz,
+            double deltaY,
+            boolean onGround
+    ) {
+        return evaluateLongJumpBlock(
+                player,
+                player.lastX,
+                player.lastZ,
+                player.x,
+                player.z,
+                horiz,
+                deltaY,
+                onGround
+        ) != null;
     }
 
     public static void onServerTickStart(GrimPlayer player) {
@@ -192,6 +326,20 @@ public final class Speed2b2tModifications {
         ensureServerTickAligned(player);
         PacketStateData data = player.packetStateData;
 
+        String longJumpReason = evaluateLongJumpBlock(
+                player,
+                fromX,
+                fromZ,
+                packetPosition.getX(),
+                packetPosition.getZ(),
+                packetHoriz,
+                deltaY,
+                packetOnGround
+        );
+        if (longJumpReason != null) {
+            return cancelSpeedPacket(player, event, longJumpReason, true);
+        }
+
         if (MovementLimits2b2tModifications.isInJumpSpeedGrace(player, deltaY, packetOnGround)
                 || isLegitSprintJumpBurst(player, deltaY, packetOnGround, packetHoriz)) {
             if (MovementLimits2b2tModifications.isJumpTakeoffMovement(player, deltaY, packetOnGround)) {
@@ -283,6 +431,7 @@ public final class Speed2b2tModifications {
         data.speed2b2tTickLocked = false;
         data.consecutiveGroundOverspeedTicks = 0;
         data.consecutiveAirOverspeedTicks = 0;
+        clearJumpArcAnchor(player);
         player.getSetbackTeleportUtil().executeNonSimulatingForceResync();
     }
 

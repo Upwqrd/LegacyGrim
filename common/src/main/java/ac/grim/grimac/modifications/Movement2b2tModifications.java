@@ -32,6 +32,7 @@ public final class Movement2b2tModifications {
 
     public static void onElytraGlideEnded(GrimPlayer player) {
         player.packetStateData.elytraGlideEndCoastTicks = glideEndCoastTicks;
+        Speed2b2tModifications.clearJumpArcAnchor(player);
         if (hasActiveFireworkBoost(player)) {
             player.packetStateData.elytraFireworkBoostTicks = Math.max(
                     player.packetStateData.elytraFireworkBoostTicks,
@@ -43,6 +44,8 @@ public final class Movement2b2tModifications {
     public static void tickElytraGlideEndCoast(GrimPlayer player) {
         if (player.wasGliding && !player.isGliding) {
             onElytraGlideEnded(player);
+        } else if (!player.wasGliding && player.isGliding) {
+            Speed2b2tModifications.clearJumpArcAnchor(player);
         } else if (player.packetStateData.elytraGlideEndCoastTicks > 0 && !player.isGliding) {
             player.packetStateData.elytraGlideEndCoastTicks--;
         }

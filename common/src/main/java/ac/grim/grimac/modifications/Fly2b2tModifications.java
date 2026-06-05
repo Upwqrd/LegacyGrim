@@ -134,6 +134,9 @@ public final class Fly2b2tModifications {
             return true;
         }
         if (player.packetStateData.ticksSinceOnGround <= jumpGraceAirTicks && deltaY > 0) {
+            if (Spider2b2tModifications.isSlowWallClimbPattern(player, deltaY)) {
+                return false;
+            }
             return true;
         }
         if (player.packetStateData.fallBufferTicks > 0) {

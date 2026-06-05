@@ -19,6 +19,7 @@ public final class Fork2b2tConfig {
         Elytra2b2tModifications.reload(config);
         Fly2b2tModifications.reload(config);
         Speed2b2tModifications.reload(config);
+        Spider2b2tModifications.reload(config);
         Crystal2b2tModifications.reload(config);
         AntiPearlPhase2b2tModifications.reload(config);
         Breaking2b2tModifications.reload(config);

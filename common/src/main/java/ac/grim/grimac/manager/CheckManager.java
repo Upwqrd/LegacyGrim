@@ -25,6 +25,7 @@ import ac.grim.grimac.checks.impl.misc.Post;
 import ac.grim.grimac.checks.impl.misc.TransactionOrder;
 import ac.grim.grimac.checks.impl.movement.ElytraLimits2b2t;
 import ac.grim.grimac.checks.impl.movement.FlyLimits2b2t;
+import ac.grim.grimac.checks.impl.movement.SpiderLimits2b2t;
 import ac.grim.grimac.checks.impl.movement.NoSlow;
 import ac.grim.grimac.checks.impl.movement.PredictionRunner;
 import ac.grim.grimac.checks.impl.movement.SetbackBlocker;
@@ -205,6 +206,7 @@ public class CheckManager {
                 .put(SpeedLimits2b2t.class, new SpeedLimits2b2t(player))
                 .put(GroundSpoof.class, new GroundSpoof(player))
                 .put(FlyLimits2b2t.class, new FlyLimits2b2t(player))
+                .put(SpiderLimits2b2t.class, new SpiderLimits2b2t(player))
                 .put(ElytraLimits2b2t.class, new ElytraLimits2b2t(player))
                 .put(StepLimits2b2t.class, new StepLimits2b2t(player))
                 .put(SuperDebug.class, new SuperDebug(player))

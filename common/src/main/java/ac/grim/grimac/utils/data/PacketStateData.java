@@ -95,6 +95,18 @@ public class PacketStateData {
     public boolean hasStepAscendAnchorY = false;
     public double stepAscendAnchorY;
 
+    /** Spider2b2t: cumulative wall climb without ladder. */
+    public boolean hasWallClimbAnchorY = false;
+    public double wallClimbAnchorY;
+    public int consecutiveWallClimbTicks = 0;
+    public long wallClimbLastTrackedMovementPacket = -1;
+    public String spiderBlockReasonThisPacket = null;
+
+    /** Speed2b2t: horizontal distance from sprint-jump takeoff (anti Meteor LongJump). */
+    public boolean hasJumpArcAnchor = false;
+    public double jumpArcAnchorX;
+    public double jumpArcAnchorZ;
+
     /** HighJump2b2t: vertical packet limit per tick. */
     public int verticalTickId = Integer.MIN_VALUE;
     public double verticalDistanceThisTick = 0.0;

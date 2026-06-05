@@ -16,7 +16,7 @@ alerts:
         receive: false
 
 verbose:
-    print-to-console: false
+    print-to-console: true
 
 check-for-updates: true
 
@@ -216,6 +216,16 @@ Step2b2t:
     enabled: true
     step-epsilon: 0.02
     jump-takeoff-delta-y: 0.42
+
+Spider2b2t:
+    enabled: true
+    wall-climb-min-delta-y: 0.003
+    wall-climb-max-delta-y: 0.35
+    meteor-spider-min-delta-y: 0.12
+    meteor-spider-max-delta-y: 0.25
+    min-consecutive-ticks: 3
+    max-cumulative-climb-blocks: 1.0
+    step-epsilon: 0.02
 
 Boat2b2t:
     enabled: true
