@@ -130,10 +130,13 @@ public class GrimPlayer implements GrimUser {
     public long lastTransReceived = 0;
     @Getter
     private long playerClockAtLeast = System.nanoTime();
-    public double minMomentumDyForElytraExempt = 0.12D;
-    public double minMomentumHorizForElytraExempt = 0.15D;
-    // Tracks the last tick when the player swapped inventory items (e.g., chestplate/elytra)
-    public int lastInventorySwapTick = -7;
+    public double lastWasClimbing = 0;
+    public boolean canSwimHop = false;
+    public int riptideSpinAttackTicks = 0;
+    public int powderSnowFrozenTicks = 0;
+    public boolean hasGravity = true;
+    public final long joinTime = System.currentTimeMillis();
+    public boolean playerEntityHasGravity = true;
     public VectorData predictedVelocity = new VectorData(new Vector3dm(), VectorData.VectorType.Normal);
     public Vector3dm actualMovement = new Vector3dm();
     public Vector3d stuckSpeedMultiplier = DEFAULT_STUCK_SPEED;
@@ -196,14 +199,6 @@ public class GrimPlayer implements GrimUser {
     public boolean horizontalCollision;
     public boolean verticalCollision;
     public boolean clientControlledVerticalCollision;
-    // Added missing fields for compatibility
-    public boolean playerEntityHasGravity;
-    public int powderSnowFrozenTicks;
-    public int riptideSpinAttackTicks;
-    public boolean isOnGround;
-    public boolean canSwimHop;
-    public double lastWasClimbing;
-    public boolean hasGravity;
     // Okay, this is our 0.03 detection
     //
     // couldSkipTick determines if an input could have resulted in the player skipping a tick < 0.03
@@ -826,26 +821,6 @@ public class GrimPlayer implements GrimUser {
         return equippable.isPresent() && equippable.get().getSlot() == slot;
     }
 
-    public static boolean shouldExemptElytraFireworkMomentum(GrimPlayer player, double deltaY, double horiz) {
-        // Exempt when gliding or using firework boost
-        if (clicked >= 5 && clicked <= 8) {
-            // Armor slot changed, record swap tick
-            player.lastInventorySwapTick = GrimAPI.INSTANCE.getTickManager().currentTick;
-        }
-        // Exempt shortly after swapping elytra/chestplate to avoid lagback
-        int currentTick = GrimAPI.INSTANCE.getTickManager().currentTick;
-        if (player.lastInventorySwapTick >= currentTick - 7) {
-            return true;
-        }
-        // Only exempt if glide end coast is present
-        if (!Movement2b2tModifications.hasGlideEndCoast(player)) {
-            return false;
-        }
-        return horiz >= player.minMomentumHorizForElytraExempt
-                || deltaY >= player.minMomentumDyForElytraExempt
-                || deltaY <= -0.04D;
-    }
-
     public void resyncPose() {
         if (getClientVersion().isNewerThanOrEquals(ClientVersion.V_1_14) && platformPlayer != null) {
             platformPlayer.setSneaking(!platformPlayer.isSneaking());
@@ -964,14 +939,11 @@ public class GrimPlayer implements GrimUser {
     public final void reload(ConfigManager config) {
         updatePermissions();
         featureManager.onReload(config);
-        String PREFIX = "grim.";
         debugPacketCancel = config.getBooleanElse("debug-packet-cancel", false);
         spamThreshold = config.getIntElse("packet-spam-threshold", 100);
         maxTransactionTime = GrimMath.clamp(config.getIntElse("max-transaction-time", 60), 1, 180);
         ignoreDuplicatePacketRotation = config.getBooleanElse("ignore-duplicate-packet-rotation", false);
         cancelDuplicatePacket = config.getBooleanElse("cancel-duplicate-packet", true);
-        minMomentumHorizForElytraExempt = config.getDoubleElse(PREFIX + "min-momentum-horiz-for-elytra-exempt", 0.15D);
-        minMomentumDyForElytraExempt = config.getDoubleElse(PREFIX + "min-momentum-dy-for-elytra-exempt", 0.12D);
 
         boolean shouldDisableResync = config.getBooleanElse("disable-default-resync-handler", false);
         Class<?> currentHandlerClass = this.resyncHandler.getClass();
