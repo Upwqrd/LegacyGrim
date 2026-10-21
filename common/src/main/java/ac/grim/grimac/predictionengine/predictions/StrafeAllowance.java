@@ -55,7 +55,7 @@ public final class StrafeAllowance {
         int count = candidates.size();
         for (int i = 0; i < count; i++) {
             VectorData vanilla = candidates.get(i);
-            if (vanilla.isTrident() || vanilla.isZeroPointZeroThree() || vanilla.isSwimHop() || vanilla.isAttackSlow()
+            if (vanilla.isTrident() || vanilla.isZeroPointZeroThree() || vanilla.isSwimHop()
                     || vanilla.isFlipItem() || vanilla.isFlipSneaking() || !finite(vanilla.vector)
                     || vanilla.input == null || vanilla.input.lengthSquared() == 0) continue;
             // Ice credit comes only from an ordinary physics candidate, never client distance.
