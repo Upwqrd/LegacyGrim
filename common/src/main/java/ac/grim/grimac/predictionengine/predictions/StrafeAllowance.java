@@ -55,15 +55,15 @@ public final class StrafeAllowance {
         int count = candidates.size();
         for (int i = 0; i < count; i++) {
             VectorData vanilla = candidates.get(i);
-            if (vanilla.isKnockback() || vanilla.isExplosion() || vanilla.isTrident()
-                    || vanilla.isZeroPointZeroThree() || vanilla.isSwimHop() || vanilla.isAttackSlow()
+            if (vanilla.isTrident() || vanilla.isZeroPointZeroThree() || vanilla.isSwimHop() || vanilla.isAttackSlow()
                     || vanilla.isFlipItem() || vanilla.isFlipSneaking() || !finite(vanilla.vector)
                     || vanilla.input == null || vanilla.input.lengthSquared() == 0) continue;
             // Ice credit comes only from an ordinary physics candidate, never client distance.
-            if (onIce) limit = Math.max(limit, Math.hypot(vanilla.vector.getX(), vanilla.vector.getZ()));
+            if (onIce && !vanilla.isKnockback() && !vanilla.isExplosion())
+                limit = Math.max(limit, Math.hypot(vanilla.vector.getX(), vanilla.vector.getZ()));
             Vector3dm movement = vanilla.vector.clone();
             VectorData source = vanilla;
-            if (hopping) {
+            if (hopping && !vanilla.isKnockback() && !vanilla.isExplosion()) {
                 var jump = player.compensatedEntities.getPotionLevelForPlayer(PotionTypes.JUMP_BOOST);
                 movement.setY((0.40123128 + (jump.isPresent() ? (jump.getAsInt() + 1) * 0.1F : 0))
                         * vanilla.stuckSpeedMultiplier.getY());
