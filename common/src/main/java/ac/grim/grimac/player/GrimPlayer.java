@@ -22,6 +22,7 @@ import ac.grim.grimac.predictionengine.EntityFluidInteraction;
 import ac.grim.grimac.predictionengine.MovementCheckRunner;
 import ac.grim.grimac.predictionengine.PointThreeEstimator;
 import ac.grim.grimac.predictionengine.UncertaintyHandler;
+import ac.grim.grimac.predictionengine.predictions.StrafeAllowance;
 import ac.grim.grimac.manager.AttackCooldownHandler;
 import ac.grim.grimac.predictionengine.blockeffects.CompensatedGeysers;
 import ac.grim.grimac.predictionengine.blockeffects.PotentSulfurGeyser;
@@ -146,6 +147,7 @@ public class GrimPlayer implements GrimUser {
     public @NotNull IndexedVector3d stuckSpeedMultiplier = StuckSpeed.NONE;
     public @NotNull IndexedVector3d lastStuckSpeedMultiplier = StuckSpeed.NONE;
     public final @NotNull UncertaintyHandler uncertaintyHandler;
+    public final StrafeAllowance strafeAllowance = new StrafeAllowance();
     public double gravity;
     public float friction;
     public double speed;

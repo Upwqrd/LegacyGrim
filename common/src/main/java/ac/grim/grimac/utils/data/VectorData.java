@@ -120,6 +120,7 @@ public class VectorData {
         FirstBreadExplosion,
         InputResult,
         EntitySpeed,
+        Strafe,
         StuckMultiplier,
         Spectator,
         Dead,

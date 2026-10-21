@@ -126,6 +126,7 @@ public class MovementCheckRunner extends GrimProcessor {
         }
 
         player.uncertaintyHandler.lastTeleportTicks.reset();
+        player.strafeAllowance.reset();
 
         // Teleports OVERRIDE explosions and knockback
         player.checkManager.getExplosionHandler().forceExempt();

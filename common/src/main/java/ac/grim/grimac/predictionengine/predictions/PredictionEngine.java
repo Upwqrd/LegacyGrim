@@ -68,6 +68,7 @@ public class PredictionEngine {
         }
 
         EntitySpeedAllowance.addCandidates(player, possibleVelocities);
+        player.strafeAllowance.addCandidates(player, possibleVelocities, this instanceof PredictionEngineNormal);
 
         // Finally, this was not 0.03 or small movements, so we can attempt to predict it.
         Vector3dm beforeCollisionMovement = doPredictions(player, possibleVelocities, speed);
@@ -75,6 +76,7 @@ public class PredictionEngine {
         // Client velocity - before collision and carried into the next tick
         // Predicted velocity - after collision and not carried into the next tick
         new MovementTickerPlayer(player).move(beforeCollisionMovement, player.predictedVelocity.vector);
+        player.strafeAllowance.finish(player);
         endOfTick(player, player.gravity);
     }
 
@@ -107,6 +109,10 @@ public class PredictionEngine {
                 // Y still comes exclusively from Grim's normal physics prediction.
                 primaryPushMovement = EntitySpeedAllowance.horizontalMovement(
                         primaryPushMovement, player.actualMovement, clientVelAfterInput.stuckSpeedMultiplier);
+            }
+
+            if (clientVelAfterInput.vectorType == VectorData.VectorType.Strafe) {
+                primaryPushMovement = player.strafeAllowance.movement(clientVelAfterInput, primaryPushMovement, player.actualMovement);
             }
 
             Vector3dm bestTheoreticalCollisionResult = VectorUtils.cutBoxToVector(player.actualMovement, new SimpleCollisionBox(0, Math.min(0, primaryPushMovement.getY()), 0, primaryPushMovement.getX(), Math.max(0.6, primaryPushMovement.getY()), primaryPushMovement.getZ()).sort());
