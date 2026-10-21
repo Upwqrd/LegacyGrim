@@ -4,6 +4,7 @@ import ac.grim.grimac.GrimAPI;
 import ac.grim.grimac.platform.bukkit.events.BlockPhaseProtection;
 import ac.grim.grimac.platform.bukkit.events.BlockPlaceLimiter;
 import ac.grim.grimac.platform.bukkit.events.CrystalSwapGuard;
+import ac.grim.grimac.platform.bukkit.events.GlideSwapGuard;
 import ac.grim.grimac.GrimExternalAPI;
 import ac.grim.grimac.api.GrimAPIProvider;
 import ac.grim.grimac.api.GrimAbstractAPI;
@@ -104,6 +105,10 @@ public final class GrimACBukkitLoaderPlugin extends JavaPlugin implements Platfo
         BlockPhaseProtection.start();
         Bukkit.getPluginManager().registerEvents(new BlockPlaceLimiter(), this);
         Bukkit.getPluginManager().registerEvents(new CrystalSwapGuard(), this);
+        GlideSwapGuard glideSwapGuard = new GlideSwapGuard();
+        Bukkit.getPluginManager().registerEvents(glideSwapGuard, this);
+        for (var player : Bukkit.getOnlinePlayers())
+            player.getScheduler().run(this, task -> glideSwapGuard.initialize(player), null);
     }
 
     @Override
