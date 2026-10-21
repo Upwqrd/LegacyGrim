@@ -62,11 +62,13 @@ public final class StrafeAllowance {
             Vector3dm movement = vanilla.vector.clone();
             VectorData source = vanilla;
             if (hopping && !vanilla.isKnockback() && !vanilla.isExplosion()) {
-                if (vanilla.isJump()) candidates.add(vanilla.returnNewModified(VectorData.VectorType.Strafe));
                 var jump = player.compensatedEntities.getPotionLevelForPlayer(PotionTypes.JUMP_BOOST);
-                movement.setY((0.40123128 + (jump.isPresent() ? (jump.getAsInt() + 1) * 0.1F : 0))
-                        * vanilla.stuckSpeedMultiplier.getY());
+                double boost = jump.isPresent() ? (jump.getAsInt() + 1) * 0.1F : 0;
+                double stuckY = vanilla.stuckSpeedMultiplier.getY();
+                movement.setY(Math.max((0.4 + boost) * stuckY,
+                        Math.min((0.42F + boost) * stuckY, player.actualMovement.getY())));
                 source = vanilla.returnNewModified(movement, VectorData.VectorType.Jump);
+                if (vanilla.isJump()) candidates.add(source); // Ordinary sprint-jump keeps its predicted X/Z.
             }
             candidates.add(source.returnNewModified(movement, VectorData.VectorType.Strafe));
         }
