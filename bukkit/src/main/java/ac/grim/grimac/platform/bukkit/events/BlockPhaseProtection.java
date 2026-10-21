@@ -141,7 +141,7 @@ public final class BlockPhaseProtection implements Listener {
         BoundingBox body = player.getBoundingBox().clone().shift(location.getX() - current.getX(),
                 location.getY() - current.getY(), location.getZ() - current.getZ())
                 .expand(-1.0E-5);
-        if (direction != null) body.expand(0.6, 0, 0.6, 0.6, 0.25, 0.6);
+        if (direction != null) body.expand(0.7, 0, 0.7, 0.7, 0.25, 0.7);
         Vector origin = direction == null ? null : player.getEyeLocation().add(0, 0.025, 0).toVector();
         World world = location.getWorld();
         int result = 0;
