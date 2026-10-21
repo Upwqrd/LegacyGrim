@@ -17,7 +17,7 @@ GitHub API подтвердил для Upwqrd/LegacyGrim: fork=true, parent/sour
 - PacketBlockAction, PacketServerPlayerRotation, RotationData, TeleportData и LatencyUtils после нормализации переводов строк совпадают с более старым upstream `5e15e9878^`. Git-база уже содержит последующие исправления upstream для поршней и поворотов.
 - В архиве есть Bukkit PistonEvent/BukkitEventManager; Git-база использует другую, пакетную реализацию. Она не заменялась старой реализацией.
 - Отличаются также workflow-файлы, README, версия сборки, minimization и некоторые Fabric-файлы. Полное происхождение всех локальных изменений без истории не установлено. Они не объявлены мусором и не удалены.
-- Локальные тесты форка и данные движения опубликованы вместе с test-only classpath. CSV содержит только значения движения.
+- Дополнительные тесты форка и CSV сохранены локально и исключены из итогового diff по просьбе владельца. Штатные тесты upstream сохранены.
 - Пользовательские миры, config.yml, punishments.yml, записи и тестовые команды не копируются в Git и не удаляются. Работающий стенд не подменяется сборкой другой базы.
 
 ## Группы патчей и зависимости
@@ -58,7 +58,6 @@ git diff --name-status 8baa16f2b55d188eea81436aaa484d19b61085cd HEAD
 
 - Удалён единственный неиспользуемый импорт PacketReceiveListener из PacketOrderH. Класс сохраняет PreViaPacketReceiveListener/PostPredictionListener, методы, аннотации и регистрацию. Импорт не создавал runtime-связи.
 - Только в файлах, указанных Spotless, выровнены переводы строк под Windows checkout. Нормализованный Git-diff не переписывает их логику; массовый spotlessApply не запускался.
-- Исправлено устаревшее локальное замечание «тесты не входят в опубликованный diff» после публикации тестов.
 - В production-файлах патчей не найдены LocalTestKit, TraceStrafe, имя тестового игрока, временные System.out/err и printStackTrace. Полезная upstream-диагностика и локальные записи не удалялись.
 - Сохранены лицензии, ServiceLoader-провайдеры, публичные методы, поля с Lombok-доступом, аннотации, platform-реализации и объяснения протокольных исключений. Непонятные исторические участки не удалены.
 
@@ -88,3 +87,9 @@ git diff --name-status 8baa16f2b55d188eea81436aaa484d19b61085cd HEAD
 - Предупреждения об Unsafe, deprecated API и старой ссылке JavaDoc не устранялись обновлением зависимостей или изменением несвязанных частей.
 
 Отсутствие всех багов и сохранение поведения во всех неиспытанных средах не заявляются.
+
+## Published test scope update
+
+At the owner's request, the 10 fork-specific test classes and the movement CSV were removed from the current branch and preserved locally outside the Git checkout. Upstream tests remain. The 176-test audit result above refers to revision cc2aa939f, before this removal. Production code is unchanged. Additional test-only dependencies have also been removed.
+
+After removal, the full target common/Bukkit build passed again, including formatting checks, upstream tests (48), and verification of 4 bundled service providers.

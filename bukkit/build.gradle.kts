@@ -132,19 +132,6 @@ dependencies {
     shadow(project(":common"))
 }
 
-// Regression tests for the fork policies; these dependencies are not bundled.
-dependencies {
-    testImplementation(libs.paper.api)
-    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
-    testImplementation("org.mockito:mockito-core:5.14.2")
-    testRuntimeOnly(libs.netty)
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-tasks.test {
-    useJUnitPlatform()
-    systemProperty("GrimPlatformOverride", "folia")
-}
-
 bukkit {
     name = "GrimAC"
     author = "GrimAC"
