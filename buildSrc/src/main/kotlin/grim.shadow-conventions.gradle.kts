@@ -6,14 +6,14 @@ plugins {
 }
 
 tasks.named<ShadowJar>("shadowJar") {
-    minimize {
-        // adventure's DataComponentValueConverter gson provider is only referenced via
-        // ServiceLoader, so minimize() strips it and adventure's static init then throws
-        // (ServiceConfigurationError) on enable. Keep the gson serializer's classes.
-        exclude(dependency("net.kyori:adventure-text-serializer-gson:.*"))
-        // slf4j-jdk14's provider is reached only through ServiceLoader, so minimize()
-        // drops it and the shaded slf4j goes back to printing that it found no providers.
-        exclude(dependency("org.slf4j:slf4j-jdk14:.*"))
+    // The self-contained jar includes providers loaded reflectively by PacketEvents
+    // and Adventure. Keep its complete runtime closure; static reachability is insufficient.
+    if (!BuildConfig.shadePE) {
+        minimize {
+            // These providers are reached only through ServiceLoader.
+            exclude(dependency("net.kyori:adventure-text-serializer-gson:.*"))
+            exclude(dependency("org.slf4j:slf4j-jdk14:.*"))
+        }
     }
     archiveFileName = "${rootProject.name}-${project.name}-${rootProject.version}.jar"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
