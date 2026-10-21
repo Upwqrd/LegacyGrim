@@ -28,10 +28,10 @@ public final class CrystalSwapGuard implements Listener {
     public void onPlace(EntityPlaceEvent event) {
         if (!(event.getEntity() instanceof EnderCrystal) || event.getPlayer() == null) return;
         Integer changed = slotChanges.get(event.getPlayer().getUniqueId());
-        // Inventory swaps keep the selected slot; hotbar changes require one fully elapsed server tick.
-        int elapsed = changed == null ? 2 : Bukkit.getCurrentTick() - changed;
+        // Inventory swaps keep the selected slot; hotbar changes block placement only in the same server tick.
+        int elapsed = changed == null ? 1 : Bukkit.getCurrentTick() - changed;
         if (event.getPlayer().getInventory().getItem(event.getHand()).getType() != Material.END_CRYSTAL
-                || (event.getHand() == EquipmentSlot.HAND && elapsed >= 0 && elapsed < 2))
+                || (event.getHand() == EquipmentSlot.HAND && elapsed >= 0 && elapsed < 1))
             event.setCancelled(true); // Native crystal cancellation also resyncs inventory without consuming the item.
     }
 
