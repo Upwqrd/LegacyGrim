@@ -114,8 +114,8 @@ public final class BlockPhaseProtection implements Listener {
         int obstruction = obstructions(player, current);
         if (obstruction != 2) return; // Gravity blocks do not obstruct pearls or trigger pushing.
         Location exit = null;
-        // Only lift at the arrival position. A roof requiring more than two blocks is left untouched.
-        for (int up = 1; up <= 2; up++) {
+        // Only lift at the arrival position. A roof requiring more than three blocks is left untouched.
+        for (int up = 1; up <= 3; up++) {
             Location candidate = current.clone();
             candidate.setY(Math.floor(current.getY()) + up);
             if (obstructions(player, candidate) == 0) { exit = candidate; break; }
@@ -141,7 +141,7 @@ public final class BlockPhaseProtection implements Listener {
         BoundingBox body = player.getBoundingBox().clone().shift(location.getX() - current.getX(),
                 location.getY() - current.getY(), location.getZ() - current.getZ())
                 .expand(-1.0E-5);
-        if (direction != null) body.expand(0.7, 0, 0.7, 0.7, 0.25, 0.7);
+        if (direction != null) body.expand(0.85, 0, 0.85, 0.85, 0.25, 0.85);
         Vector origin = direction == null ? null : player.getEyeLocation().add(0, 0.025, 0).toVector();
         World world = location.getWorld();
         int result = 0;
