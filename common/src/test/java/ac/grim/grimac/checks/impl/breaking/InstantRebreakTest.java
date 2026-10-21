@@ -347,6 +347,20 @@ class InstantRebreakTest {
         verify(f.world, never()).startPredicting();
     }
 
+    @Test void worldChangeCannotCarrySoftRebreakCreditOrOldTargetIntoTheNewWorld() throws Exception {
+        Fixture f = new Fixture(); f.enableWrongBreak();
+        f.firstBreak(StateTypes.ENDER_CHEST);
+        f.check.onWorldChange(); f.wrongBreak.onWorldChange();
+        clearInvocations(f.world);
+        f.state(StateTypes.COBWEB, StateTypes.COBWEB);
+        verify(f.send(DiggingAction.FINISHED_DIGGING, POS)).setCancelled(true);
+        verify(f.world, never()).startPredicting();
+        assertNull(f.check.targetBlockPosition);
+        f.send(DiggingAction.START_DIGGING, POS);
+        f.check.startBreak = System.currentTimeMillis() - 10_000;
+        verify(f.send(DiggingAction.FINISHED_DIGGING, POS), never()).setCancelled(true);
+    }
+
     static WrappedBlockState state(StateType type) { return WrappedBlockState.getDefaultState(type); }
 
     static class Fixture {

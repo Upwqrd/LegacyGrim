@@ -3,6 +3,8 @@ package ac.grim.grimac.events.packets;
 import ac.grim.grimac.GrimAPI;
 import ac.grim.grimac.checks.impl.badpackets.*;
 import ac.grim.grimac.checks.impl.elytra.ElytraC;
+import ac.grim.grimac.checks.impl.breaking.FastBreak;
+import ac.grim.grimac.checks.impl.breaking.WrongBreak;
 import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.chunks.ChunkSectionCache;
 import ac.grim.grimac.utils.data.KnownInput;
@@ -205,6 +207,8 @@ public class PacketPlayerRespawn extends PacketListenerAbstract {
                     ChunkSectionCache.releaseSharedSections(player.compensatedWorld);
                     player.compensatedWorld.chunks.clear();
                     player.compensatedWorld.clearPredictions();
+                    player.checkManager.get(FastBreak.class).onWorldChange();
+                    player.checkManager.get(WrongBreak.class).onWorldChange();
                     player.compensatedGeysers.clear();
                     player.compensatedWorld.isRaining = false;
                     player.checkManager.get(BadPacketsH.class).onWorldChange();

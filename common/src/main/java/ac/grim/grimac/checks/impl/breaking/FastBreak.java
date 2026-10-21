@@ -58,6 +58,13 @@ public class FastBreak extends Check implements BlockBreakListener, PreViaPacket
     private StateType rebreakBlock;
     private boolean finishedBreak;
 
+    public void onWorldChange() {
+        targetBlockPosition = rebreakPosition = null;
+        rebreakBlock = null;
+        finishedBreak = false;
+        maximumBlockDamage = 0;
+    }
+
     private static boolean allowsRebreak(StateType type) {
         return type.getHardness() >= 0 && type.getHardness() < StateTypes.OBSIDIAN.getHardness();
     }

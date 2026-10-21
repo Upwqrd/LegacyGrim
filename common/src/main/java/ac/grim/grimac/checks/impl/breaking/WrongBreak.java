@@ -29,6 +29,11 @@ public class WrongBreak extends Check implements BlockBreakListener {
         super(player);
     }
 
+    public void onWorldChange() {
+        lastBlock = lastCancelledBlock = lastLastBlock = null;
+        lastBlockWasInstantBreak = false;
+    }
+
     // The client sometimes sends a weird cancel packet
     private boolean shouldExempt(final WrappedBlockState block, int yPos) {
         // lastLastBlock is always null when this happens, and lastBlock isn't
