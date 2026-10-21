@@ -844,7 +844,8 @@ public class CheckManagerListener extends PacketListenerAbstract {
         fastBreak.onAcceptedBreak(blockBreak);
         player.queuedBreaks.add(blockBreak);
 
-        if (action == DiggingAction.FINISHED_DIGGING && isBreakable(blockBreak.block.getType())) {
+        // Creative mining only destroys on START; STOP must not create ghost air (FastWeb).
+        if (action == DiggingAction.FINISHED_DIGGING && player.gamemode != GameMode.CREATIVE && isBreakable(blockBreak.block.getType())) {
             player.compensatedWorld.startPredicting();
             player.compensatedWorld.updateBlock(blockBreak.position.x, blockBreak.position.y, blockBreak.position.z, 0);
             player.compensatedWorld.stopPredicting(packet);

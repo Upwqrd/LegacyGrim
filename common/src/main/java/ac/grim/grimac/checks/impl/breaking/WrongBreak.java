@@ -13,6 +13,7 @@ import com.github.retrooper.packetevents.manager.server.ServerVersion;
 import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import com.github.retrooper.packetevents.protocol.player.DiggingAction;
 import com.github.retrooper.packetevents.protocol.world.states.WrappedBlockState;
+import com.github.retrooper.packetevents.protocol.world.states.type.StateTypes;
 import com.github.retrooper.packetevents.util.Vector3i;
 
 @CheckData(name = "WrongBreak", stableKey = "grim.breaking.wrong_break", description = "Sent block break progress for a different block than the one being mined")
@@ -85,7 +86,8 @@ public class WrongBreak extends Check implements BlockBreakListener {
             final Vector3i pos = blockBreak.position;
 
             // when a player looks away from the mined block, they send a cancel, and if they look at it again, they don't send another start. (thanks mojang!)
-            if (!pos.equals(lastCancelledBlock) && (!lastBlockWasInstantBreak || player.getClientVersion().isOlderThan(ClientVersion.V_1_14_4)) && !pos.equals(lastBlock)) {
+            if (!pos.equals(lastCancelledBlock) && (!lastBlockWasInstantBreak || player.getClientVersion().isOlderThan(ClientVersion.V_1_14_4)
+                    || blockBreak.block.getType() == StateTypes.COBWEB && !BlockBreakSpeed.couldInstantlyBreakBlock(player, StateTypes.COBWEB)) && !pos.equals(lastBlock)) {
                 var buf = V.write(verbose()).uint(VerboseCodecs.enumId(DiggingAction.FINISHED_DIGGING))
                         .bool(lastBlock != null)
                         .mcPos(lastBlock == null ? 0 : lastBlock.x, lastBlock == null ? 0 : lastBlock.y, lastBlock == null ? 0 : lastBlock.z)
