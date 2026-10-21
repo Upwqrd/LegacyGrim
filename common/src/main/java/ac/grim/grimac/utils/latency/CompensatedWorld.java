@@ -2,6 +2,7 @@ package ac.grim.grimac.utils.latency;
 
 import ac.grim.grimac.GrimAPI;
 import ac.grim.grimac.api.PacketWorld;
+import ac.grim.grimac.checks.impl.breaking.FastBreak;
 import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.change.BlockModification;
 import ac.grim.grimac.utils.chunks.ChunkSectionCache;
@@ -279,6 +280,10 @@ public class CompensatedWorld implements PacketWorld {
 
     public void updateBlock(int x, int y, int z, int combinedID) {
         Vector3i asVector = new Vector3i(x, y, z);
+        if (player.checkManager != null) {
+            FastBreak fastBreak = player.checkManager.get(FastBreak.class);
+            if (fastBreak != null) fastBreak.onBlockUpdate(asVector, combinedID);
+        }
         BlockPrediction prediction = originalServerBlocks.get(asVector.getSerializedPosition());
 
         if (isCurrentlyPredicting) {

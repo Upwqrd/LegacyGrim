@@ -81,10 +81,21 @@ public class FastBreak extends Check implements BlockBreakListener, PreViaPacket
     public void onAcceptedBreak(BlockBreak blockBreak) {
         // Only an accepted START resets consumed progress; vanilla may resume after CANCEL without START.
         if (blockBreak.action == DiggingAction.START_DIGGING) {
+            StateType server = player.compensatedWorld.getServerBlock(blockBreak.position).getType();
+            if (blockBreak.position.y < player.compensatedWorld.getMinHeight()
+                    || blockBreak.position.y >= player.compensatedWorld.getMaxHeight()
+                    || server.getHardness() < 0 || server.isAir() && blockBreak.block.getType().isAir()) return;
             rebreakPosition = blockBreak.position;
             rebreakBlock = null;
         } else if (blockBreak.action == DiggingAction.FINISHED_DIGGING && blockBreak.position.equals(rebreakPosition)) {
             rebreakBlock = rebreakType(blockBreak);
+        }
+    }
+
+    public void onBlockUpdate(Vector3i position, int blockId) {
+        if (position.equals(rebreakPosition) && blockId != 0) {
+            StateType type = WrappedBlockState.getByGlobalId(blockId).getType();
+            if (player.compensatedWorld.getBlock(position).getType() != type) rebreakBlock = type;
         }
     }
 
