@@ -221,6 +221,7 @@ public class Reach extends Check implements PacketReceiveListener {
             SimpleCollisionBox targetBox = getTargetBox(reachEntity);
 
             double maxReach = applyReachModifiers(targetBox, hasAttackRange, itemMaxReach, itemHitboxMargin, !player.packetStateData.didLastMovementIncludePosition);
+            if (reachEntity.getType() == EntityTypes.END_CRYSTAL) maxReach = Math.max(maxReach, 4.5);
             return ReachUtils.getMinReachToBox(player, targetBox) > maxReach;
         }
     }
@@ -261,6 +262,7 @@ public class Reach extends Check implements PacketReceiveListener {
 
         double movementAllowance = attackRangeMovement == null ? 0 : getAttackRangeMovementAllowance(attackRangeMovement);
         double maxReach = applyReachModifiers(targetBox, hasAttackRange, itemMaxReach, itemHitboxMargin, !player.packetStateData.didLastLastMovementIncludePosition) + movementAllowance;
+        if (reachEntity.getType() == EntityTypes.END_CRYSTAL) maxReach = Math.max(maxReach, 4.5);
         double minDistance = Double.MAX_VALUE;
 
         // https://bugs.mojang.com/browse/MC-67665
