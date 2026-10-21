@@ -1,3 +1,5 @@
+> This branch is a Folia policy fork. See [the administrator README](README-FORK.md) and [the audit report](AUDIT.md) for its rules, limitations and verification.
+
 <div align="center">
  <h1>GrimAC</h1>
 
