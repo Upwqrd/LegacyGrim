@@ -4,6 +4,7 @@ import ac.grim.grimac.GrimAPI;
 import ac.grim.grimac.platform.api.Platform;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -47,7 +48,9 @@ public final class EmbeddedInteractionGuard implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInteract(PlayerInteractEvent event) {
         if ((event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) && blocked(event.getPlayer())) {
-            event.setUseItemInHand(Event.Result.DENY);
+            var item = event.getItem();
+            if (item == null || item.getType() != Material.APPLE && item.getType() != Material.GOLDEN_APPLE
+                    && item.getType() != Material.ENCHANTED_GOLDEN_APPLE) event.setUseItemInHand(Event.Result.DENY);
             event.setUseInteractedBlock(Event.Result.DENY);
         }
     }
@@ -79,6 +82,8 @@ public final class EmbeddedInteractionGuard implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onConsume(PlayerItemConsumeEvent event) {
-        if (blocked(event.getPlayer())) event.setCancelled(true);
+        var type = event.getItem().getType();
+        if (type != Material.APPLE && type != Material.GOLDEN_APPLE && type != Material.ENCHANTED_GOLDEN_APPLE
+                && blocked(event.getPlayer())) event.setCancelled(true);
     }
 }
