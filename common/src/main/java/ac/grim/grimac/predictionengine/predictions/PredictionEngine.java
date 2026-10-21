@@ -2,6 +2,7 @@ package ac.grim.grimac.predictionengine.predictions;
 
 import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.predictionengine.SneakingEstimator;
+import ac.grim.grimac.predictionengine.predictions.rideable.EntitySpeedAllowance;
 import ac.grim.grimac.predictionengine.movementtick.MovementTickerPlayer;
 import ac.grim.grimac.predictionengine.predictions.input.Input;
 import ac.grim.grimac.predictionengine.predictions.input.InputTransformer;
@@ -66,6 +67,8 @@ public class PredictionEngine {
             addZeroPointThreeToPossibilities(speed, player, possibleVelocities);
         }
 
+        EntitySpeedAllowance.addCandidates(player, possibleVelocities);
+
         // Finally, this was not 0.03 or small movements, so we can attempt to predict it.
         Vector3dm beforeCollisionMovement = doPredictions(player, possibleVelocities, speed);
 
@@ -99,6 +102,12 @@ public class PredictionEngine {
 
         for (VectorData clientVelAfterInput : possibleVelocities) {
             Vector3dm primaryPushMovement = handleStartingVelocityUncertainty(player, clientVelAfterInput, player.actualMovement);
+            if (clientVelAfterInput.vectorType == VectorData.VectorType.EntitySpeed) {
+                // Apply the circular horizontal limit AFTER uncertainty, BEFORE collisions.
+                // Y still comes exclusively from Grim's normal physics prediction.
+                primaryPushMovement = EntitySpeedAllowance.horizontalMovement(
+                        primaryPushMovement, player.actualMovement, clientVelAfterInput.stuckSpeedMultiplier);
+            }
 
             Vector3dm bestTheoreticalCollisionResult = VectorUtils.cutBoxToVector(player.actualMovement, new SimpleCollisionBox(0, Math.min(0, primaryPushMovement.getY()), 0, primaryPushMovement.getX(), Math.max(0.6, primaryPushMovement.getY()), primaryPushMovement.getZ()).sort());
             // Check if this vector could ever possible beat the last vector in terms of accuracy
