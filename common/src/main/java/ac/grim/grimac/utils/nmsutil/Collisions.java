@@ -107,6 +107,10 @@ public final class Collisions {
         if (down.getY() <= -height - COLLISION_EPSILON || down.getY() >= vanilla.getY()) return vanilla;
         Vector3dm step = horizontal.add(down);
         if (step.distanceSquared(player.actualMovement) >= vanilla.distanceSquared(player.actualMovement)) return vanilla;
+        BlockAndPositionPredicate cobweb = (block, x, y, z) -> block.getType() == StateTypes.COBWEB;
+        if (hasMaterial(player, player.boundingBox.copy().expand(-COLLISION_EPSILON), cobweb)
+                || hasMaterial(player, player.boundingBox.copy().offset(step.getX(), 0, step.getZ())
+                .expandToCoordinate(0, step.getY(), 0).expand(-COLLISION_EPSILON), cobweb)) return vanilla;
         player.uncertaintyHandler.isStepMovement = true;
         return step;
     }
