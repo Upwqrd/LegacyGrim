@@ -156,8 +156,8 @@ public final class BlockPhaseProtection implements Listener {
                     for (BoundingBox shape : block.getCollisionShape().getBoundingBoxes()) {
                         shape = shape.clone().shift(x, y, z);
                         if (!body.overlaps(shape)) continue;
-                        // Sweep the pearl's 0.25-block body along its first tick, only against nearby shapes.
-                        if (direction != null && shape.expand(0.125).rayTrace(origin, direction, 1.5) == null) continue;
+                        // Sweep nearby shapes far enough to include diagonal floor hits beyond the first tick.
+                        if (direction != null && shape.expand(0.125).rayTrace(origin, direction, 2.0) == null) continue;
                         if (!block.getType().hasGravity()) return 2;
                         result = 1;
                     }
