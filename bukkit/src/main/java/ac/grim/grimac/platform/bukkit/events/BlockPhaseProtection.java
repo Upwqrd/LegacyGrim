@@ -27,6 +27,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.util.BoundingBox;
+import org.bukkit.util.Vector;
 
 import java.util.Map;
 import java.util.UUID;
@@ -76,18 +77,18 @@ public final class BlockPhaseProtection implements Listener {
         if (event.useItemInHand() == Event.Result.DENY || event.getItem() == null || event.getItem().getType() != Material.ENDER_PEARL
                 || event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK
                 || !enabled("PearlPhasePrevention")) return;
-        if (closeToWall(event.getPlayer()))
+        if (closeToWall(event.getPlayer(), event.getPlayer().getEyeLocation().getDirection()))
             event.setUseItemInHand(Event.Result.DENY);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onLaunch(ProjectileLaunchEvent event) {
         if (event.getEntity() instanceof EnderPearl pearl && pearl.getShooter() instanceof Player player
-                && enabled("PearlPhasePrevention") && closeToWall(player)) event.setCancelled(true);
+                && enabled("PearlPhasePrevention") && closeToWall(player, pearl.getVelocity())) event.setCancelled(true);
     }
 
-    private static boolean closeToWall(Player player) {
-        return obstructions(player, player.getLocation(), 0.25) == 2;
+    private static boolean closeToWall(Player player, Vector direction) {
+        return direction.lengthSquared() > 0 && obstructions(player, player.getLocation(), direction) == 2;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -130,14 +131,16 @@ public final class BlockPhaseProtection implements Listener {
 
     // 0 = clear, 1 = gravity blocks only, 2 = solid obstruction or unavailable region. Never loads chunks.
     static int obstructions(Player player, Location location) {
-        return obstructions(player, location, 0);
+        return obstructions(player, location, null);
     }
 
-    private static int obstructions(Player player, Location location, double margin) {
+    private static int obstructions(Player player, Location location, Vector direction) {
         Location current = player.getLocation();
         BoundingBox body = player.getBoundingBox().clone().shift(location.getX() - current.getX(),
                 location.getY() - current.getY(), location.getZ() - current.getZ())
-                .expand(margin, 0, margin, margin, margin, margin).expand(-1.0E-5);
+                .expand(-1.0E-5);
+        if (direction != null) body.expand(0.25, 0, 0.25, 0.25, 0.25, 0.25);
+        Vector origin = direction == null ? null : player.getEyeLocation().add(0, 0.025, 0).toVector();
         World world = location.getWorld();
         int result = 0;
         for (int x = (int) Math.floor(body.getMinX()); x <= Math.floor(body.getMaxX()); x++) {
@@ -149,7 +152,10 @@ public final class BlockPhaseProtection implements Listener {
                     Block block = world.getBlockAt(x, y, z);
                     if (block.isEmpty() || block.isLiquid()) continue;
                     for (BoundingBox shape : block.getCollisionShape().getBoundingBoxes()) {
-                        if (!body.overlaps(shape.clone().shift(x, y, z))) continue;
+                        shape = shape.clone().shift(x, y, z);
+                        if (!body.overlaps(shape)) continue;
+                        // Sweep the pearl's 0.25-block body along its first tick, only against nearby shapes.
+                        if (direction != null && shape.expand(0.125).rayTrace(origin, direction, 1.5) == null) continue;
                         if (!block.getType().hasGravity()) return 2;
                         result = 1;
                     }
