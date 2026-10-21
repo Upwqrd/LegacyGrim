@@ -46,7 +46,7 @@ public final class GlideSwapGuard implements Listener {
     public void onInventory(InventoryClickEvent event) {
         // A burst can restore the original chest item before equipment updates observe it.
         if (event.getWhoClicked() instanceof Player player && event.getSlotType() == InventoryType.SlotType.ARMOR
-                && event.getSlot() == 38) equippedSince.remove(player.getUniqueId());
+                && event.getSlot() == 38) equippedSince.put(player.getUniqueId(), Bukkit.getCurrentTick());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

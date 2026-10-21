@@ -94,11 +94,26 @@ class GlideSwapGuardTest {
         when(click.getWhoClicked()).thenReturn(player);
         when(click.getSlotType()).thenReturn(org.bukkit.event.inventory.InventoryType.SlotType.ARMOR);
         when(click.getSlot()).thenReturn(38);
-        guard.onInventory(click);
-        tick.addAndGet(100); // Repeated transient launches cannot reuse the old permission.
-        assertTrue(glide(true).isCancelled());
-        armor(elytra, elytra); tick.addAndGet(2);
+        for (int i = 0; i < 100; i++) {
+            guard.onInventory(click);
+            assertTrue(glide(true).isCancelled());
+            tick.incrementAndGet();
+        }
+        // Once chest-slot actions stop, normal flight recovers even without an equipment-change event.
+        tick.addAndGet(2);
         assertFalse(glide(true).isCancelled());
+    }
+
+    @Test void pickingUpAndRestoringTheSameElytraDoesNotPermanentlyLockNormalFlight() throws Exception {
+        guard.initialize(player);
+        var click = mock(org.bukkit.event.inventory.InventoryClickEvent.class);
+        when(click.getWhoClicked()).thenReturn(player);
+        when(click.getSlotType()).thenReturn(org.bukkit.event.inventory.InventoryType.SlotType.ARMOR);
+        when(click.getSlot()).thenReturn(38);
+        guard.onInventory(click);
+        assertTrue(glide(true).isCancelled());
+        tick.incrementAndGet(); assertTrue(glide(true).isCancelled());
+        tick.incrementAndGet(); assertFalse(glide(true).isCancelled());
     }
 
     @Test void durabilityUpdatesAndOtherArmorSlotsDoNotResetWornTime() throws Exception {
