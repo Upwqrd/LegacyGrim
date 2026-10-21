@@ -38,7 +38,7 @@ public final class BlockPhaseProtection implements Listener {
     private final Map<UUID, State> states = new ConcurrentHashMap<>();
 
     private static final class State {
-        TaskHandle task;
+        volatile TaskHandle task;
         long teleport;
         volatile boolean pending;
     }
