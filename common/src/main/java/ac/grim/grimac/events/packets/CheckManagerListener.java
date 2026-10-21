@@ -640,11 +640,11 @@ public class CheckManagerListener extends PacketListenerAbstract {
         Vector3d position = flying.getLocation().getPosition();
         if (position.getX() != player.x || position.getZ() != player.z) return false;
         if (rise && position.getY() == player.y) return true;
-        // Pure 1/16-block rise and return: keep these extra packets out of the 20 TPS movement/timer accounting.
-        if (rise || position.getY() != player.y + 0.0625
+        // Bounded 1/16-block rise and return, including client epsilon; these are not extra physics ticks.
+        if (rise || !(position.getY() >= player.y + 0.0625 && position.getY() <= player.y + 0.0626)
                 || Collisions.isEmpty(player, new SimpleCollisionBox(player.boundingBox.minX, player.y - 1.0E-5, player.boundingBox.minZ,
                 player.boundingBox.maxX, player.y, player.boundingBox.maxZ))
-                || !Collisions.isEmpty(player, player.boundingBox.copy().expandToCoordinate(0, 0.0625, 0).expand(-Collisions.COLLISION_EPSILON))) return false;
+                || !Collisions.isEmpty(player, player.boundingBox.copy().expandToCoordinate(0, 0.0626, 0).expand(-Collisions.COLLISION_EPSILON))) return false;
         player.packetStateData.packetCriticalRise = true;
         return true;
     }
