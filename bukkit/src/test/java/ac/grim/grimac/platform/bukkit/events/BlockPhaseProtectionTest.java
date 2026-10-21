@@ -398,6 +398,26 @@ class BlockPhaseProtectionTest {
         }
     }
 
+    @Test
+    void quittingDuringWatcherRegistrationCancelsTheReturnedTask() {
+        BlockPhaseProtection fresh = new BlockPhaseProtection();
+        doAnswer(call -> {
+            fresh.onQuit(new org.bukkit.event.player.PlayerQuitEvent(player, "quit"));
+            return task;
+        }).when(scheduler).runAtFixedRate(any(), any(), any(), any(), anyLong(), anyLong());
+        fresh.watch(player);
+        verify(task).cancel();
+    }
+
+    @Test
+    void retiredEntityCannotRetainAWatcherEntry() throws Exception {
+        BlockPhaseProtection fresh = new BlockPhaseProtection();
+        when(scheduler.runAtFixedRate(any(), any(), any(), any(), anyLong(), anyLong())).thenReturn(null);
+        fresh.watch(player);
+        var field = BlockPhaseProtection.class.getDeclaredField("states"); field.setAccessible(true);
+        assertTrue(((Map<?, ?>) field.get(fresh)).isEmpty());
+    }
+
     void block(int x, int y, int z, Material material, BoundingBox... shapes) {
         Block block = mock(Block.class);
         VoxelShape shape = mock(VoxelShape.class);

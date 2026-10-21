@@ -59,6 +59,8 @@ public final class BlockPhaseProtection implements Listener {
         if (states.putIfAbsent(player.getUniqueId(), state) != null) return;
         state.task = GrimAPI.INSTANCE.getScheduler().getEntityScheduler().runAtFixedRate(new BukkitGrimEntity(player),
                 GrimAPI.INSTANCE.getGrimPlugin(), () -> check(player, false), null, 1, 5);
+        if (state.task == null) states.remove(player.getUniqueId(), state);
+        else if (states.get(player.getUniqueId()) != state) state.task.cancel();
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
