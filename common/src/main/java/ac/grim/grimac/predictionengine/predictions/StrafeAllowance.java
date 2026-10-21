@@ -27,8 +27,6 @@ public final class StrafeAllowance {
                 && !player.wasTouchingWater && !player.wasTouchingLava && !player.isSneaking
                 && !player.packetStateData.isSlowedByUsingItem() && player.hasGravity
                 && !player.uncertaintyHandler.influencedByBouncyBlock()
-                && player.firstBreadKB == null && player.likelyKB == null
-                && player.firstBreadExplosion == null && player.likelyExplosions == null
                 && !player.packetStateData.tryingToRiptide
                 && !player.compensatedEntities.hasPotionEffect(PotionTypes.LEVITATION)
                 && finite(player.actualMovement);

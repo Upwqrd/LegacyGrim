@@ -262,6 +262,6 @@ public class ExplosionHandler extends Check implements PacketSendListener, PostP
 
     @Override
     public void onReload(@NotNull ConfigManager config) {
-        offsetToFlag = config.getDoubleElse("Explosion.threshold", 0.00001);
+        offsetToFlag = Double.POSITIVE_INFINITY; // Velocity cancellation is allowed by this fork.
     }
 }

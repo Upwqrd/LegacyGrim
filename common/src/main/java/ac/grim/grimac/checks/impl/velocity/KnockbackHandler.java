@@ -250,7 +250,7 @@ public class KnockbackHandler extends Check implements PacketSendListener, PostP
 
     @Override
     public void onReload(@NotNull ConfigManager config) {
-        offsetToFlag = config.getDoubleElse("Knockback.threshold", 0.001);
+        offsetToFlag = Double.POSITIVE_INFINITY; // Velocity cancellation is allowed by this fork.
         maxAdv = config.getDoubleElse("Knockback.max-advantage", 1);
         immediate = config.getDoubleElse("Knockback.immediate-setback-threshold", 0.1);
         multiplier = config.getDoubleElse("Knockback.setback-decay-multiplier", 0.999);

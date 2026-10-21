@@ -37,10 +37,7 @@ public final class EntitySpeedAllowance {
         PacketEntity riding = player.compensatedEntities.self.getRiding();
         if (riding == null || riding.isDead || !supports(riding.getType())
                 || !canControl(player, riding)
-                || !finite(player.actualMovement)
-                // Never overwrite required server velocity, including its uncertain first tick.
-                || player.firstBreadKB != null || player.likelyKB != null
-                || player.firstBreadExplosion != null || player.likelyExplosions != null) {
+                || !finite(player.actualMovement)) {
             return;
         }
 
