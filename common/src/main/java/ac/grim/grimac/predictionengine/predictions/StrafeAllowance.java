@@ -75,7 +75,7 @@ public final class StrafeAllowance {
 
     public void finish(GrimPlayer player) {
         if (!enabled) return;
-        VectorData chosen = player.predictedVelocity.preUncertainty;
+        VectorData chosen = player.predictedVelocity.lastVector;
         boolean selected = chosen != null && chosen.vectorType == VectorData.VectorType.Strafe;
         if (selected || active) {
             // Never feed unvalidated client distance back into the allowance.
