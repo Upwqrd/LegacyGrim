@@ -336,6 +336,17 @@ class InstantRebreakTest {
         verify(f.send(DiggingAction.FINISHED_DIGGING, POS), never()).setCancelled(true);
     }
 
+    @Test void replacementBeforeFirstStopCannotCreateConsumedRebreakProgress() throws Exception {
+        Fixture f = new Fixture();
+        f.state(StateTypes.OBSIDIAN, StateTypes.OBSIDIAN); f.damage = .0002;
+        f.send(DiggingAction.START_DIGGING, POS);
+        f.check.onBlockUpdate(POS, state(StateTypes.ENDER_CHEST).getGlobalId());
+        f.state(StateTypes.ENDER_CHEST, StateTypes.ENDER_CHEST);
+        f.check.startBreak = System.currentTimeMillis() - 100;
+        verify(f.send(DiggingAction.FINISHED_DIGGING, POS)).setCancelled(true);
+        verify(f.world, never()).startPredicting();
+    }
+
     static WrappedBlockState state(StateType type) { return WrappedBlockState.getDefaultState(type); }
 
     static class Fixture {

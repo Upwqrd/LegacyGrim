@@ -56,6 +56,7 @@ public class FastBreak extends Check implements BlockBreakListener, PreViaPacket
 
     private Vector3i rebreakPosition;
     private StateType rebreakBlock;
+    private boolean finishedBreak;
 
     private static boolean allowsRebreak(StateType type) {
         return type.getHardness() >= 0 && type.getHardness() < StateTypes.OBSIDIAN.getHardness();
@@ -87,8 +88,10 @@ public class FastBreak extends Check implements BlockBreakListener, PreViaPacket
                     || server.getHardness() < 0 || server.isAir() && blockBreak.block.getType().isAir()) return;
             rebreakPosition = blockBreak.position;
             rebreakBlock = null;
+            finishedBreak = false;
         } else if (blockBreak.action == DiggingAction.FINISHED_DIGGING && blockBreak.position.equals(rebreakPosition)) {
             rebreakBlock = rebreakType(blockBreak);
+            finishedBreak = true;
         }
     }
 
@@ -101,7 +104,7 @@ public class FastBreak extends Check implements BlockBreakListener, PreViaPacket
 
     @Override
     public void onBlockBreak(BlockBreak blockBreak) {
-        if (isRebreak(blockBreak) && allowsRebreak(rebreakType(blockBreak))) return;
+        if (finishedBreak && isRebreak(blockBreak) && allowsRebreak(rebreakType(blockBreak))) return;
         if (blockBreak.action == DiggingAction.START_DIGGING) {
             if (!ViaVersionUtil.isAvailable) {
                 // Exempt all blocks that do not exist in the player version
