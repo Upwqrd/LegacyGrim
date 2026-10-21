@@ -41,7 +41,7 @@ public final class StrafeAllowance {
         if (slowness.isPresent()) base *= Math.max(0, 1 - 0.15 * (slowness.getAsInt() + 1));
         onIce = player.lastOnGround && BlockProperties.getFriction(player, player.mainSupportingBlockData,
                 new Vector3d(player.lastX, player.lastY, player.lastZ)) >= 0.98F;
-        hopping = player.lastOnGround && !player.onGround;
+        hopping = player.lastOnGround && !player.onGround && player.actualMovement.getY() > 0;
         if (hopping) iceSpeed = 0;
         else if (iceSpeed > 0) iceSpeed = previousHop ? airSpeed(base, iceSpeed, true) : iceSpeed * (158.0 / 159.0);
         if (hopping && (Math.abs(JumpPower.getJumpPower(player) - 0.42F) > 1e-6
@@ -88,8 +88,9 @@ public final class StrafeAllowance {
     public void finish(GrimPlayer player) {
         if (!enabled) return;
         // Landing resolves Y before X/Z: the same tick may carry the player off the edge.
-        landed = player.onGround && player.verticalCollision && player.predictedVelocity.preUncertainty != null
-                && player.predictedVelocity.preUncertainty.vector.getY() < 0;
+        // MovementTicker rebuilds BestVelPicked: its input survives in lastVector, not preUncertainty.
+        landed = player.onGround && player.verticalCollision && player.predictedVelocity.lastVector != null
+                && player.predictedVelocity.lastVector.vector.getY() < 0;
         double predictedSpeed = Math.hypot(player.predictedVelocity.vector.getX(), player.predictedVelocity.vector.getZ());
         iceSpeed = Math.min(onIce ? limit : iceSpeed, predictedSpeed);
         // Keep the validated profile even when an ordinary physics candidate wins.
