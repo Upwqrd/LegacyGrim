@@ -79,6 +79,9 @@ public final class StrafeAllowance {
     public Vector3dm movement(VectorData candidate, Vector3dm physics, Vector3dm requested) {
         double cap = limit * Math.max(0, Math.min(1,
                 Math.min(candidate.stuckSpeedMultiplier.getX(), candidate.stuckSpeedMultiplier.getZ())));
+        // Ordinary physics keeps its speed when steering, without seeding extra profile momentum.
+        if (!candidate.isKnockback() && !candidate.isExplosion())
+            cap = Math.max(cap, Math.hypot(physics.getX(), physics.getZ()));
         return boundedMovement(physics, requested, cap);
     }
 
