@@ -13,11 +13,11 @@ import java.util.List;
 
 /** Bounded Strafe for the recorded profiles, with prediction-owned speed and normal collisions. */
 public final class StrafeAllowance {
-    private boolean previousHop, enabled, hopping, onIce;
+    private boolean previousHop, enabled, hopping, onIce, landed;
     private double previousSpeed, limit, iceSpeed;
 
     public void reset() {
-        previousHop = enabled = false;
+        previousHop = enabled = landed = false;
         previousSpeed = iceSpeed = 0;
     }
 
@@ -45,11 +45,13 @@ public final class StrafeAllowance {
         if (hopping) iceSpeed = 0;
         else if (iceSpeed > 0) iceSpeed = previousHop ? airSpeed(base, iceSpeed, true) : iceSpeed * (158.0 / 159.0);
         if (hopping && (Math.abs(JumpPower.getJumpPower(player) - 0.42F) > 1e-6
-                || Collisions.isEmpty(player, player.boundingBox.copy().offset(0, -0.03, 0)))) {
+                || !landed && Collisions.isEmpty(player, player.boundingBox.copy().offset(0, -0.03, 0)))) {
             reset();
             return;
         }
         limit = Math.max(iceSpeed, player.lastOnGround ? groundSpeed(base, hopping) : airSpeed(base, previousSpeed, previousHop));
+        if (player.lastOnGround)
+            limit = Math.max(limit, hopping ? previousSpeed * 1.535 : airSpeed(base, previousSpeed, previousHop));
         int count = candidates.size();
         for (int i = 0; i < count; i++) {
             VectorData vanilla = candidates.get(i);
@@ -82,6 +84,9 @@ public final class StrafeAllowance {
 
     public void finish(GrimPlayer player) {
         if (!enabled) return;
+        // Landing resolves Y before X/Z: the same tick may carry the player off the edge.
+        landed = player.onGround && player.verticalCollision && player.predictedVelocity.preUncertainty != null
+                && player.predictedVelocity.preUncertainty.vector.getY() < 0;
         double predictedSpeed = Math.hypot(player.predictedVelocity.vector.getX(), player.predictedVelocity.vector.getZ());
         iceSpeed = Math.min(onIce ? limit : iceSpeed, predictedSpeed);
         // Keep the validated profile even when an ordinary physics candidate wins.
