@@ -3,6 +3,7 @@ package ac.grim.grimac.platform.bukkit;
 import ac.grim.grimac.GrimAPI;
 import ac.grim.grimac.platform.bukkit.events.BlockPhaseProtection;
 import ac.grim.grimac.platform.bukkit.events.BlockPlaceLimiter;
+import ac.grim.grimac.platform.bukkit.events.CrystalSwapGuard;
 import ac.grim.grimac.GrimExternalAPI;
 import ac.grim.grimac.api.GrimAPIProvider;
 import ac.grim.grimac.api.GrimAbstractAPI;
@@ -102,6 +103,7 @@ public final class GrimACBukkitLoaderPlugin extends JavaPlugin implements Platfo
         GrimAPI.INSTANCE.start();
         BlockPhaseProtection.start();
         Bukkit.getPluginManager().registerEvents(new BlockPlaceLimiter(), this);
+        Bukkit.getPluginManager().registerEvents(new CrystalSwapGuard(), this);
     }
 
     @Override
