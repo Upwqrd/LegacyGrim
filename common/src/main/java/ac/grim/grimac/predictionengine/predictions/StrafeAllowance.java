@@ -11,7 +11,7 @@ import com.github.retrooper.packetevents.util.Vector3d;
 
 import java.util.List;
 
-/** Meteor's default Strafe (1.6), with prediction-owned speed and normal collisions. */
+/** Bounded Strafe up to 1.65, with prediction-owned speed and normal collisions. */
 public final class StrafeAllowance {
     private boolean previousHop, enabled, hopping, onIce;
     private double previousSpeed, limit, iceSpeed;
@@ -90,7 +90,7 @@ public final class StrafeAllowance {
     }
 
     static double groundSpeed(double base, boolean hopping) {
-        return Math.max(base, (1.18F * base - 0.01) * (hopping ? 1.6 : 1));
+        return Math.max(base, (1.18F * base - 0.01) * (hopping ? 1.65 : 1));
     }
 
     static double airSpeed(double base, double previous, boolean afterHop) {
