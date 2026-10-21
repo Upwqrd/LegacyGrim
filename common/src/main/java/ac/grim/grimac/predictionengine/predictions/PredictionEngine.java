@@ -115,7 +115,7 @@ public class PredictionEngine {
                 primaryPushMovement = player.strafeAllowance.movement(clientVelAfterInput, primaryPushMovement, player.actualMovement);
             }
 
-            Vector3dm bestTheoreticalCollisionResult = VectorUtils.cutBoxToVector(player.actualMovement, new SimpleCollisionBox(0, Math.min(0, primaryPushMovement.getY()), 0, primaryPushMovement.getX(), Math.max(player.getAllowedStepHeight(), Math.max(0.6, primaryPushMovement.getY())), primaryPushMovement.getZ()).sort());
+            Vector3dm bestTheoreticalCollisionResult = VectorUtils.cutBoxToVector(player.actualMovement, new SimpleCollisionBox(0, Math.min(-player.getAllowedStepHeight(), primaryPushMovement.getY()), 0, primaryPushMovement.getX(), Math.max(player.getAllowedStepHeight(), Math.max(0.6, primaryPushMovement.getY())), primaryPushMovement.getZ()).sort());
             // Check if this vector could ever possible beat the last vector in terms of accuracy
             // This is quite a good optimization :)
             if (bestTheoreticalCollisionResult.distanceSquared(player.actualMovement) > bestInput && !clientVelAfterInput.isKnockback() && !clientVelAfterInput.isExplosion()) {

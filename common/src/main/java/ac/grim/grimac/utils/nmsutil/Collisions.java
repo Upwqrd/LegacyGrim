@@ -83,12 +83,32 @@ public final class Collisions {
     public static Vector3dm collide(GrimPlayer player, double desiredX, double desiredY, double desiredZ, double clientVelY, VectorData data) {
         double vanillaHeight = player.getMaxUpStep();
         Vector3dm vanilla = collide(player, desiredX, desiredY, desiredZ, clientVelY, data, vanillaHeight);
-        // Extra Step is an alternative prediction, never a change to ordinary stepping or edge safety.
-        if (data == null || data.isZeroPointZeroThree() || player.inVehicle() || !player.lastOnGround
-                || player.actualMovement.getY() <= vanillaHeight || player.getAllowedStepHeight() <= vanillaHeight
-                || player.actualMovement.getY() > player.getAllowedStepHeight() + COLLISION_EPSILON) return vanilla;
-        Vector3dm step = collide(player, desiredX, desiredY, desiredZ, clientVelY, data, player.getAllowedStepHeight());
-        return step.distanceSquared(player.actualMovement) < vanilla.distanceSquared(player.actualMovement) ? step : vanilla;
+        // Extra stepping is an alternative prediction, never a change to ordinary movement or edge safety.
+        double height = player.getAllowedStepHeight();
+        if (data == null || data.isZeroPointZeroThree() || player.inVehicle() || !player.lastOnGround || height <= 0) return vanilla;
+        if (player.actualMovement.getY() > vanillaHeight && height > vanillaHeight
+                && player.actualMovement.getY() <= height + COLLISION_EPSILON) {
+            Vector3dm step = collide(player, desiredX, desiredY, desiredZ, clientVelY, data, height);
+            return step.distanceSquared(player.actualMovement) < vanilla.distanceSquared(player.actualMovement) ? step : vanilla;
+        }
+        if (desiredY > 0 || player.actualMovement.getY() >= Math.min(desiredY, vanilla.getY()) || player.actualMovement.getY() < -height - COLLISION_EPSILON
+                || !player.hasGravity || player.isFlying || player.isGliding || player.isClimbing || player.isSwimming
+                || player.wasTouchingWater || player.wasTouchingLava || data.stuckSpeedMultiplier.getY() < 1
+                || player.packetStateData.tryingToRiptide || player.compensatedEntities.hasPotionEffect(PotionTypes.LEVITATION)
+                || player.compensatedEntities.hasPotionEffect(PotionTypes.SLOW_FALLING)
+                || player.getSetbackTeleportUtil().getRequiredSetBack() != null
+                && player.getSetbackTeleportUtil().getRequiredSetBack().getTicksComplete() == 1) return vanilla;
+        // Move off the edge, then sweep down onto the first solid surface within the shared height limit.
+        List<SimpleCollisionBox> boxes = new ArrayList<>();
+        getCollisionBoxes(player, player.boundingBox.copy().expandToCoordinate(desiredX, -height - COLLISION_EPSILON, desiredZ), boxes, false);
+        Vector3dm horizontal = collideBoundingBoxLegacy(new Vector3dm(desiredX, 0, desiredZ), player.boundingBox, boxes, nonStupidityCombinations.get(0));
+        Vector3dm down = collideBoundingBoxLegacy(new Vector3dm(0, -height - COLLISION_EPSILON, 0),
+                player.boundingBox.copy().offset(horizontal.getX(), 0, horizontal.getZ()), boxes, nonStupidityCombinations.get(0));
+        if (down.getY() <= -height - COLLISION_EPSILON || down.getY() >= vanilla.getY()) return vanilla;
+        Vector3dm step = horizontal.add(down);
+        if (step.distanceSquared(player.actualMovement) >= vanilla.distanceSquared(player.actualMovement)) return vanilla;
+        player.uncertaintyHandler.isStepMovement = true;
+        return step;
     }
 
     private static Vector3dm collide(GrimPlayer player, double desiredX, double desiredY, double desiredZ, double clientVelY, VectorData data, double stepUpHeight) {

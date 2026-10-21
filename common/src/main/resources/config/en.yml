@@ -241,5 +241,5 @@ update-permission-ticks: -1
 config-flavor: V2
 config-version: 11
 
-# Maximum allowed Step height in blocks (0 disables the extra allowance, maximum 2).
+# Maximum allowed Step / ReverseStep height in blocks (0 disables the extra allowance, maximum 2).
 step-height: 1.0
