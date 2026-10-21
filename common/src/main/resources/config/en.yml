@@ -243,3 +243,8 @@ config-version: 11
 
 # Maximum allowed Step / ReverseStep height in blocks (0 disables the extra allowance, maximum 2).
 step-height: 1.0
+
+# Block pearls thrown into a wall within 0.75 blocks and correct unsafe pearl landings.
+PearlPhasePrevention: true
+# Return embedded players to a clear position; gravity blocks are ignored.
+PushOutOfBlocks: true
