@@ -81,10 +81,20 @@ public final class Collisions {
     }
 
     public static Vector3dm collide(GrimPlayer player, double desiredX, double desiredY, double desiredZ, double clientVelY, VectorData data) {
+        double vanillaHeight = player.getMaxUpStep();
+        Vector3dm vanilla = collide(player, desiredX, desiredY, desiredZ, clientVelY, data, vanillaHeight);
+        // Extra Step is an alternative prediction, never a change to ordinary stepping or edge safety.
+        if (data == null || data.isZeroPointZeroThree() || player.inVehicle() || !player.lastOnGround
+                || player.actualMovement.getY() <= vanillaHeight || player.getAllowedStepHeight() <= vanillaHeight
+                || player.actualMovement.getY() > player.getAllowedStepHeight() + COLLISION_EPSILON) return vanilla;
+        Vector3dm step = collide(player, desiredX, desiredY, desiredZ, clientVelY, data, player.getAllowedStepHeight());
+        return step.distanceSquared(player.actualMovement) < vanilla.distanceSquared(player.actualMovement) ? step : vanilla;
+    }
+
+    private static Vector3dm collide(GrimPlayer player, double desiredX, double desiredY, double desiredZ, double clientVelY, VectorData data, double stepUpHeight) {
         if (desiredX == 0 && desiredY == 0 && desiredZ == 0) return new Vector3dm();
 
         final SimpleCollisionBox grabBoxesBB = player.boundingBox.copy();
-        final double stepUpHeight = player.getMaxUpStep();
 
         if (desiredX == 0.0 && desiredZ == 0.0) {
             if (desiredY > 0.0) {

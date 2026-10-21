@@ -464,12 +464,12 @@ public class GrimPlayer implements GrimUser {
         baseTickAddition.add(vector);
     }
 
-    private float allowedStepHeight = 1.0F;
+    @Getter private float allowedStepHeight = 1.0F;
 
     public float getMaxUpStep() {
         final PacketEntitySelf self = compensatedEntities.self;
         final PacketEntity riding = self.getRiding();
-        if (riding == null) return Math.max(allowedStepHeight, (float) self.getAttributeValue(Attributes.STEP_HEIGHT));
+        if (riding == null) return (float) self.getAttributeValue(Attributes.STEP_HEIGHT);
 
         if (riding.isBoat) {
             return 0f;
