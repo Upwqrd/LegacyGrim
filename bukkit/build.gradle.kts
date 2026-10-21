@@ -132,6 +132,19 @@ dependencies {
     shadow(project(":common"))
 }
 
+// Regression tests for the fork policies; these dependencies are not bundled.
+dependencies {
+    testImplementation(libs.paper.api)
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testImplementation("org.mockito:mockito-core:5.14.2")
+    testRuntimeOnly(libs.netty)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+tasks.test {
+    useJUnitPlatform()
+    systemProperty("GrimPlatformOverride", "folia")
+}
+
 bukkit {
     name = "GrimAC"
     author = "GrimAC"
@@ -244,6 +257,33 @@ bukkit {
 publishing.publications.create<MavenPublication>("maven") {
     artifact(tasks["shadowJar"])
 }
+
+val verifyBundledServiceProviders by tasks.registering {
+    group = "verification"
+    description = "Verify that relocated ServiceLoader providers exist in the plugin jar."
+    val jar = tasks.named<Jar>("shadowJar").flatMap { it.archiveFile }
+    inputs.file(jar)
+    doLast {
+        ZipFile(jar.get().asFile).use { zip ->
+            var count = 0
+            zip.entries().asSequence().filter { !it.isDirectory && it.name.startsWith("META-INF/services/") }
+                .forEach { service ->
+                    zip.getInputStream(service).bufferedReader().use { reader ->
+                        reader.lineSequence().map { it.substringBefore('#').trim() }.filter { it.isNotEmpty() }
+                            .filter { it.startsWith("ac.grim.grimac.shaded.") }.forEach { provider ->
+                                check(zip.getEntry(provider.replace('.', '/') + ".class") != null) {
+                                    "Missing bundled service provider $provider in ${service.name}"
+                                }
+                                count++
+                            }
+                    }
+                }
+            logger.lifecycle("Verified $count bundled ServiceLoader provider entries")
+        }
+    }
+}
+
+tasks.named("check") { dependsOn(verifyBundledServiceProviders) }
 
 tasks {
     // 1.8.8 - 1.16.5   = Java 8
