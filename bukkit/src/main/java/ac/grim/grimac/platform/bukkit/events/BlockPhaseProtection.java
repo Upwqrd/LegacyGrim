@@ -9,7 +9,6 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.manager.server.ServerVersion;
 import ac.grim.grimac.platform.bukkit.utils.reflection.PaperUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -28,7 +27,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.util.BoundingBox;
-import org.bukkit.util.Vector;
 
 import java.util.Map;
 import java.util.UUID;
@@ -78,21 +76,18 @@ public final class BlockPhaseProtection implements Listener {
         if (event.useItemInHand() == Event.Result.DENY || event.getItem() == null || event.getItem().getType() != Material.ENDER_PEARL
                 || event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK
                 || !enabled("PearlPhasePrevention")) return;
-        if (closeToWall(event.getPlayer(), event.getPlayer().getEyeLocation().getDirection()))
+        if (closeToWall(event.getPlayer()))
             event.setUseItemInHand(Event.Result.DENY);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onLaunch(ProjectileLaunchEvent event) {
         if (event.getEntity() instanceof EnderPearl pearl && pearl.getShooter() instanceof Player player
-                && enabled("PearlPhasePrevention") && closeToWall(player, pearl.getVelocity())) event.setCancelled(true);
+                && enabled("PearlPhasePrevention") && closeToWall(player)) event.setCancelled(true);
     }
 
-    private static boolean closeToWall(Player player, Vector direction) {
-        Location eye = player.getEyeLocation();
-        return obstructions(player, player.getLocation(), 0.25) != 0 || direction.lengthSquared() > 0
-                && (!readable(eye.clone().add(direction.clone().normalize().multiply(0.75)))
-                || eye.getWorld().rayTraceBlocks(eye, direction.clone().normalize(), 0.75, FluidCollisionMode.NEVER, true) != null);
+    private static boolean closeToWall(Player player) {
+        return obstructions(player, player.getLocation(), 0.25) == 2;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -114,8 +109,7 @@ public final class BlockPhaseProtection implements Listener {
                 || !(pearl ? enabled("PearlPhasePrevention") : enabled("PushOutOfBlocks"))) return;
         Location current = player.getLocation();
         int obstruction = obstructions(player, current);
-        if (obstruction == 0) return;
-        if (!pearl && obstruction == 1) return; // Gravity blocks are deliberately ignored by PushOutOfBlocks.
+        if (obstruction != 2) return; // Gravity blocks do not obstruct pearls or trigger pushing.
         Location exit = null;
         // Only lift at the arrival position. A roof requiring more than two blocks is left untouched.
         for (int up = 1; up <= 2; up++) {

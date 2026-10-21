@@ -244,7 +244,7 @@ config-version: 11
 # Maximum allowed Step / ReverseStep height in blocks (0 disables the extra allowance, maximum 2).
 step-height: 1.0
 
-# Block wall pearls within 0.75 blocks before use; lift unsafe arrivals up by at most 2 blocks.
+# Block pearls close to solid walls/ceilings; lift unsafe arrivals up by at most 2 blocks.
 PearlPhasePrevention: true
 # Lift embedded players up by at most 2 blocks; thicker roofs and gravity blocks are ignored.
 PushOutOfBlocks: true
