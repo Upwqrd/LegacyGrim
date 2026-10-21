@@ -25,7 +25,7 @@ public final class StrafeAllowance {
         enabled = normalMovement && !player.inVehicle() && !player.isFlying && !player.isGliding
                 && !player.wasFlying && !player.wasGliding && !player.isClimbing && !player.isSwimming
                 && !player.wasTouchingWater && !player.wasTouchingLava && !player.isSneaking
-                && !player.packetStateData.isSlowedByUsingItem() && player.hasGravity
+                && player.hasGravity
                 && !player.uncertaintyHandler.influencedByBouncyBlock()
                 && !player.packetStateData.tryingToRiptide
                 && !player.compensatedEntities.hasPotionEffect(PotionTypes.LEVITATION)
@@ -40,7 +40,7 @@ public final class StrafeAllowance {
         var speed = player.compensatedEntities.getPotionLevelForPlayer(PotionTypes.SPEED);
         var slowness = player.compensatedEntities.getPotionLevelForPlayer(PotionTypes.SLOWNESS);
         if (speed.isPresent()) base *= 1 + 0.2 * (speed.getAsInt() + 1);
-        if (slowness.isPresent()) base /= 1 + 0.2 * (slowness.getAsInt() + 1);
+        if (slowness.isPresent()) base *= Math.max(0, 1 - 0.15 * (slowness.getAsInt() + 1));
         onIce = player.lastOnGround && BlockProperties.getFriction(player, player.mainSupportingBlockData,
                 new Vector3d(player.lastX, player.lastY, player.lastZ)) >= 0.98F;
         hopping = player.lastOnGround && !player.onGround;
@@ -56,7 +56,7 @@ public final class StrafeAllowance {
         for (int i = 0; i < count; i++) {
             VectorData vanilla = candidates.get(i);
             if (vanilla.isTrident() || vanilla.isZeroPointZeroThree() || vanilla.isSwimHop()
-                    || vanilla.isFlipItem() || vanilla.isFlipSneaking() || !finite(vanilla.vector)
+                    || vanilla.isFlipSneaking() || !finite(vanilla.vector)
                     || vanilla.input == null || vanilla.input.lengthSquared() == 0) continue;
             // Ice credit comes only from an ordinary physics candidate, never client distance.
             if (onIce && !vanilla.isKnockback() && !vanilla.isExplosion())

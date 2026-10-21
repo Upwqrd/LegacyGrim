@@ -18,8 +18,7 @@ public class SprintC extends Check implements PostPredictionListener {
 
     @Override
     public boolean isApplicable() {
-        // https://bugs.mojang.com/browse/MC-152728
-        return player.getClientVersion().isOlderThan(ClientVersion.V_1_14_2) || player.getClientVersion() == ClientVersion.V_1_21_4;
+        return false; // Sprinting while using items is allowed in this fork.
     }
 
     @Override

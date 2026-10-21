@@ -53,6 +53,6 @@ public class NoSlow extends Check implements PostPredictionListener {
 
     @Override
     public void onReload(@NotNull ConfigManager config) {
-        offsetToFlag = config.getDoubleElse(getConfigName() + ".threshold", 0.001);
+        offsetToFlag = Double.POSITIVE_INFINITY; // Item-use slowdown is optional in this fork.
     }
 }
