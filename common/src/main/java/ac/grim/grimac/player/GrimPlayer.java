@@ -464,10 +464,12 @@ public class GrimPlayer implements GrimUser {
         baseTickAddition.add(vector);
     }
 
+    private float allowedStepHeight = 1.0F;
+
     public float getMaxUpStep() {
         final PacketEntitySelf self = compensatedEntities.self;
         final PacketEntity riding = self.getRiding();
-        if (riding == null) return (float) self.getAttributeValue(Attributes.STEP_HEIGHT);
+        if (riding == null) return Math.max(allowedStepHeight, (float) self.getAttributeValue(Attributes.STEP_HEIGHT));
 
         if (riding.isBoat) {
             return 0f;
@@ -974,6 +976,8 @@ public class GrimPlayer implements GrimUser {
     public final void reload(ConfigManager config) {
         updatePermissions();
         featureManager.onReload(config);
+        double stepHeight = config.getDoubleElse("step-height", 1.0);
+        allowedStepHeight = (float) (Double.isFinite(stepHeight) ? GrimMath.clamp(stepHeight, 0, 2) : 1.0);
         debugPacketCancel = config.getBooleanElse("debug-packet-cancel", false);
         spamThreshold = config.getIntElse("packet-spam-threshold", 100);
         maxTransactionTime = GrimMath.clamp(config.getIntElse("max-transaction-time", 60), 1, 180);

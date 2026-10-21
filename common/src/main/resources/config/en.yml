@@ -240,3 +240,6 @@ update-permission-ticks: -1
 #                   auto-migrate up via the bundled updater on next start.
 config-flavor: V2
 config-version: 11
+
+# Maximum allowed Step height in blocks (0 disables the extra allowance, maximum 2).
+step-height: 1.0

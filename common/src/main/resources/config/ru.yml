@@ -239,3 +239,6 @@ update-permission-ticks: -1
 
 config-flavor: V2
 config-version: 11
+
+# Максимальная высота Step в блоках (0 — без дополнительного допуска, максимум 2).
+step-height: 1.0
