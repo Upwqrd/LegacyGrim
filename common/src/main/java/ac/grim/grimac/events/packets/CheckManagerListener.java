@@ -7,6 +7,7 @@ import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.update.*;
 import ac.grim.grimac.utils.blockplace.BlockPlaceResult;
 import ac.grim.grimac.utils.blockplace.ConsumesBlockPlace;
+import ac.grim.grimac.utils.collisions.datatypes.SimpleCollisionBox;
 import ac.grim.grimac.utils.change.BlockModification;
 import ac.grim.grimac.utils.data.*;
 import ac.grim.grimac.utils.inventory.Inventory;
@@ -28,6 +29,7 @@ import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import com.github.retrooper.packetevents.protocol.player.DiggingAction;
 import com.github.retrooper.packetevents.protocol.player.GameMode;
 import com.github.retrooper.packetevents.protocol.player.InteractionHand;
+import com.github.retrooper.packetevents.protocol.potion.PotionTypes;
 import com.github.retrooper.packetevents.protocol.world.BlockFace;
 import com.github.retrooper.packetevents.protocol.world.Location;
 import com.github.retrooper.packetevents.protocol.world.states.WrappedBlockState;
@@ -423,6 +425,8 @@ public class CheckManagerListener extends PacketListenerAbstract {
             teleportData = !TELEPORT_CONTAINS_POSITION && flying.hasPositionChanged() && flying.hasRotationChanged() ? player.getSetbackTeleportUtil().checkTeleportQueue(position.getX(), position.getY(), position.getZ(), location.getYaw(), location.getPitch()) : new TeleportAcceptData();
             player.packetStateData.lastPacketWasTeleport = teleportData.isTeleport();
 
+            if (isPacketCritical(player, flying)) return;
+
             if (flying.hasRotationChanged() && !flying.hasPositionChanged() && !flying.isOnGround() && !flying.isHorizontalCollision()) {
                 RotationData data = player.pendingRotations.peek();
 
@@ -621,6 +625,28 @@ public class CheckManagerListener extends PacketListenerAbstract {
         GrimPlayer player = GrimAPI.INSTANCE.getPlayerDataManager().getPlayer(event.getUser());
         if (player == null) return;
         player.checkManager.onPacketSend(event);
+    }
+
+    private static boolean isPacketCritical(GrimPlayer player, WrapperPlayClientPlayerFlying flying) {
+        boolean rise = player.packetStateData.packetCriticalRise;
+        player.packetStateData.packetCriticalRise = false;
+        if (!flying.hasPositionChanged() || flying.hasRotationChanged() || flying.isOnGround()
+                || player.packetStateData.lastPacketWasTeleport || !player.onGround || !player.hasGravity
+                || player.inVehicle() || player.isFlying || player.isGliding || player.isClimbing || player.isSwimming
+                || player.wasTouchingWater || player.wasTouchingLava || player.packetStateData.tryingToRiptide
+                || player.clientVelocity.getY() > 0 || player.compensatedEntities.hasPotionEffect(PotionTypes.LEVITATION)
+                || player.compensatedEntities.hasPotionEffect(PotionTypes.SLOW_FALLING)
+                || player.getSetbackTeleportUtil().shouldBlockMovement()) return false;
+        Vector3d position = flying.getLocation().getPosition();
+        if (position.getX() != player.x || position.getZ() != player.z) return false;
+        if (rise && position.getY() == player.y) return true;
+        // Pure 1/16-block rise and return: keep these extra packets out of the 20 TPS movement/timer accounting.
+        if (rise || position.getY() != player.y + 0.0625
+                || Collisions.isEmpty(player, new SimpleCollisionBox(player.boundingBox.minX, player.y - 1.0E-5, player.boundingBox.minZ,
+                player.boundingBox.maxX, player.y, player.boundingBox.maxZ))
+                || !Collisions.isEmpty(player, player.boundingBox.copy().expandToCoordinate(0, 0.0625, 0).expand(-Collisions.COLLISION_EPSILON))) return false;
+        player.packetStateData.packetCriticalRise = true;
+        return true;
     }
 
     private static boolean isDuplicatePacket(@NotNull GrimPlayer player, @NotNull WrapperPlayClientPlayerFlying flying) {

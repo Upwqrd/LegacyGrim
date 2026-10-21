@@ -8,6 +8,7 @@ import lombok.Getter;
 // Helps clean up the player class and makes devs aware they are sync'd to the netty thread
 public class PacketStateData {
     public boolean packetPlayerOnGround = false;
+    public boolean packetCriticalRise;
     public boolean lastPacketWasTeleport = false;
     public boolean cancelDuplicatePacket, lastPacketWasOnePointSeventeenDuplicate = false;
     public boolean lastTransactionPacketWasValid = false;
