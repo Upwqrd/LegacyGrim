@@ -119,8 +119,9 @@ public class CompensatedInventory extends GrimProcessor implements PacketReceive
     }
 
     public ItemStack getHeldItem() {
+        // The server may not have processed a silent slot change yet.
         ItemStack item = isPacketInventoryActive || player.platformPlayer == null ? inventory.getHeldItem() :
-                player.platformPlayer.getInventory().getItemInHand();
+                player.platformPlayer.getInventory().getStack(inventory.getSelected(), inventory.getSelected() + Inventory.HOTBAR_OFFSET);
         return item == null ? ItemStack.EMPTY : item;
     }
 
