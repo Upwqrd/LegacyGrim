@@ -3,20 +3,22 @@ package ac.grim.grimac.predictionengine.predictions;
 import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.data.VectorData;
 import ac.grim.grimac.utils.math.Vector3dm;
+import ac.grim.grimac.utils.nmsutil.BlockProperties;
 import ac.grim.grimac.utils.nmsutil.Collisions;
 import ac.grim.grimac.utils.nmsutil.JumpPower;
 import com.github.retrooper.packetevents.protocol.potion.PotionTypes;
+import com.github.retrooper.packetevents.util.Vector3d;
 
 import java.util.List;
 
 /** Meteor's default Strafe (1.6), with prediction-owned speed and normal collisions. */
 public final class StrafeAllowance {
-    private boolean active, previousHop, enabled, hopping;
-    private double previousSpeed, limit;
+    private boolean active, previousHop, enabled, hopping, onIce;
+    private double previousSpeed, limit, iceSpeed;
 
     public void reset() {
         active = previousHop = enabled = false;
-        previousSpeed = 0;
+        previousSpeed = iceSpeed = 0;
     }
 
     public void addCandidates(GrimPlayer player, List<VectorData> candidates, boolean normalMovement) {
@@ -35,19 +37,23 @@ public final class StrafeAllowance {
             return;
         }
         // An air packet alone cannot start or restart the hop profile.
-        if (!active && !player.lastOnGround) return;
+        if (!active && !player.lastOnGround && iceSpeed == 0) return;
         double base = 0.2873;
         var speed = player.compensatedEntities.getPotionLevelForPlayer(PotionTypes.SPEED);
         var slowness = player.compensatedEntities.getPotionLevelForPlayer(PotionTypes.SLOWNESS);
         if (speed.isPresent()) base *= 1 + 0.2 * (speed.getAsInt() + 1);
         if (slowness.isPresent()) base /= 1 + 0.2 * (slowness.getAsInt() + 1);
+        onIce = player.lastOnGround && BlockProperties.getFriction(player, player.mainSupportingBlockData,
+                new Vector3d(player.lastX, player.lastY, player.lastZ)) >= 0.98F;
         hopping = player.lastOnGround && !player.onGround;
+        if (hopping) iceSpeed = 0;
+        else if (iceSpeed > 0) iceSpeed = previousHop ? airSpeed(base, iceSpeed, true) : iceSpeed * (158.0 / 159.0);
         if (hopping && (Math.abs(JumpPower.getJumpPower(player) - 0.42F) > 1e-6
                 || Collisions.isEmpty(player, player.boundingBox.copy().offset(0, -0.03, 0)))) {
             reset();
             return;
         }
-        limit = player.lastOnGround ? groundSpeed(base, hopping) : airSpeed(base, previousSpeed, previousHop);
+        limit = Math.max(iceSpeed, player.lastOnGround ? groundSpeed(base, hopping) : airSpeed(base, previousSpeed, previousHop));
         int count = candidates.size();
         for (int i = 0; i < count; i++) {
             VectorData vanilla = candidates.get(i);
@@ -55,6 +61,8 @@ public final class StrafeAllowance {
                     || vanilla.isZeroPointZeroThree() || vanilla.isSwimHop() || vanilla.isAttackSlow()
                     || vanilla.isFlipItem() || vanilla.isFlipSneaking() || !finite(vanilla.vector)
                     || vanilla.input == null || vanilla.input.lengthSquared() == 0) continue;
+            // Ice credit comes only from an ordinary physics candidate, never client distance.
+            if (onIce) limit = Math.max(limit, Math.hypot(vanilla.vector.getX(), vanilla.vector.getZ()));
             Vector3dm movement = vanilla.vector.clone();
             VectorData source = vanilla;
             if (hopping) {
@@ -75,6 +83,8 @@ public final class StrafeAllowance {
 
     public void finish(GrimPlayer player) {
         if (!enabled) return;
+        double predictedSpeed = Math.hypot(player.predictedVelocity.vector.getX(), player.predictedVelocity.vector.getZ());
+        iceSpeed = Math.min(onIce ? limit : iceSpeed, predictedSpeed);
         VectorData chosen = player.predictedVelocity.lastVector;
         boolean selected = chosen != null && chosen.vectorType == VectorData.VectorType.Strafe;
         if (selected || active) {
