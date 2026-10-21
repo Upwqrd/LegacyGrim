@@ -51,6 +51,7 @@ public final class BlockPhaseProtection implements Listener {
         if (PacketEvents.getAPI().getServerManager().getVersion().isOlderThan(ServerVersion.V_1_17)) return;
         BlockPhaseProtection protection = new BlockPhaseProtection();
         Bukkit.getPluginManager().registerEvents(protection, GrimACBukkitLoaderPlugin.LOADER);
+        Bukkit.getPluginManager().registerEvents(new EmbeddedInteractionGuard(), GrimACBukkitLoaderPlugin.LOADER);
         Bukkit.getOnlinePlayers().forEach(protection::watch);
     }
 
