@@ -12,6 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.EnderPearl;
@@ -19,6 +20,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.Event;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -33,10 +37,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /** Server collision shapes, checked only on the player's owning region. */
 public final class BlockPhaseProtection implements Listener {
     private final Map<UUID, State> states = new ConcurrentHashMap<>();
-    private static final int[][] DIRECTIONS = {{1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}, {0, 1, 0}, {0, -1, 0}};
 
     private static final class State {
-        Location safe;
         TaskHandle task;
         long teleport;
         volatile boolean pending;
@@ -71,17 +73,26 @@ public final class BlockPhaseProtection implements Listener {
         if (state != null && state.task != null) state.task.cancel();
     }
 
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInteract(PlayerInteractEvent event) {
+        if (event.useItemInHand() == Event.Result.DENY || event.getItem() == null || event.getItem().getType() != Material.ENDER_PEARL
+                || event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK
+                || !enabled("PearlPhasePrevention")) return;
+        if (closeToWall(event.getPlayer(), event.getPlayer().getEyeLocation().getDirection()))
+            event.setUseItemInHand(Event.Result.DENY);
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onLaunch(ProjectileLaunchEvent event) {
-        if (!(event.getEntity() instanceof EnderPearl pearl) || !(pearl.getShooter() instanceof Player player)
-                || !enabled("PearlPhasePrevention")) return;
-        Vector direction = pearl.getVelocity();
+        if (event.getEntity() instanceof EnderPearl pearl && pearl.getShooter() instanceof Player player
+                && enabled("PearlPhasePrevention") && closeToWall(player, pearl.getVelocity())) event.setCancelled(true);
+    }
+
+    private static boolean closeToWall(Player player, Vector direction) {
         Location eye = player.getEyeLocation();
-        if (obstructions(player, player.getLocation()) != 0 || direction.lengthSquared() > 0
+        return obstructions(player, player.getLocation()) != 0 || direction.lengthSquared() > 0
                 && (!readable(eye.clone().add(direction.clone().normalize().multiply(0.75)))
-                || eye.getWorld().rayTraceBlocks(eye, direction.normalize(), 0.75, FluidCollisionMode.NEVER, true) != null)) {
-            event.setCancelled(true);
-        }
+                || eye.getWorld().rayTraceBlocks(eye, direction.clone().normalize(), 0.75, FluidCollisionMode.NEVER, true) != null);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -91,7 +102,6 @@ public final class BlockPhaseProtection implements Listener {
         Player player = event.getPlayer();
         State state = states.get(player.getUniqueId());
         if (state == null || state.pending) return;
-        if (obstructions(player, event.getFrom()) == 0) state.safe = event.getFrom().clone();
         long teleport = ++state.teleport;
         // A pearl may cross regions: inspect the destination after arrival on the entity scheduler.
         GrimAPI.INSTANCE.getScheduler().getEntityScheduler().execute(new BukkitGrimEntity(player), GrimAPI.INSTANCE.getGrimPlugin(),
@@ -104,22 +114,16 @@ public final class BlockPhaseProtection implements Listener {
                 || !(pearl ? enabled("PearlPhasePrevention") : enabled("PushOutOfBlocks"))) return;
         Location current = player.getLocation();
         int obstruction = obstructions(player, current);
-        if (obstruction == 0) { state.safe = current; return; }
+        if (obstruction == 0) return;
         if (!pearl && obstruction == 1) return; // Gravity blocks are deliberately ignored by PushOutOfBlocks.
-        Location exit = state.safe;
-        if (exit != null && readable(exit) && obstructions(player, exit) != 0) exit = null;
-        if (exit == null) {
-            search: for (double distance = 0.5; distance <= 3; distance += 0.5) {
-                for (int[] direction : DIRECTIONS) {
-                    Location candidate = current.clone().add(direction[0] * distance, direction[1] * distance, direction[2] * distance);
-                    if (obstructions(player, candidate) == 0) { exit = candidate; break search; }
-                }
-            }
+        Location exit = null;
+        // Only lift at the arrival position. A roof requiring more than two blocks is left untouched.
+        for (int up = 1; up <= 2; up++) {
+            Location candidate = current.clone();
+            candidate.setY(Math.floor(current.getY()) + up);
+            if (obstructions(player, candidate) == 0) { exit = candidate; break; }
         }
-        if (exit == null) exit = current.getWorld().getSpawnLocation();
-        exit = exit.clone();
-        exit.setYaw(current.getYaw());
-        exit.setPitch(current.getPitch());
+        if (exit == null) return;
         state.pending = true;
         PaperUtils.teleportAsync(player, exit).whenComplete((success, failure) -> state.pending = false);
     }
