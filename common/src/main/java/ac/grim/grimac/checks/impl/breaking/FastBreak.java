@@ -54,8 +54,43 @@ public class FastBreak extends Check implements BlockBreakListener, PreViaPacket
     double blockBreakBalance = 0;
     double blockDelayBalance = 0;
 
+    private Vector3i rebreakPosition;
+    private StateType rebreakBlock;
+
+    private static boolean allowsRebreak(StateType type) {
+        return type.getHardness() >= 0 && type.getHardness() < StateTypes.OBSIDIAN.getHardness();
+    }
+
+    private StateType rebreakType(BlockBreak blockBreak) {
+        StateType predicted = blockBreak.block.getType();
+        if (!allowsRebreak(predicted)) return predicted;
+        StateType server = player.compensatedWorld.getServerBlock(blockBreak.position).getType();
+        if (!server.isAir()) return server;
+        return predicted.isAir() && rebreakBlock != null ? rebreakBlock : predicted;
+    }
+
+    private boolean isRebreak(BlockBreak blockBreak) {
+        return blockBreak.action == DiggingAction.FINISHED_DIGGING && rebreakBlock != null
+                && blockBreak.position.equals(rebreakPosition);
+    }
+
+    public boolean isInvalidRebreak(BlockBreak blockBreak) {
+        return isRebreak(blockBreak) && !allowsRebreak(rebreakType(blockBreak));
+    }
+
+    public void onAcceptedBreak(BlockBreak blockBreak) {
+        // Only an accepted START resets consumed progress; vanilla may resume after CANCEL without START.
+        if (blockBreak.action == DiggingAction.START_DIGGING) {
+            rebreakPosition = blockBreak.position;
+            rebreakBlock = null;
+        } else if (blockBreak.action == DiggingAction.FINISHED_DIGGING && blockBreak.position.equals(rebreakPosition)) {
+            rebreakBlock = rebreakType(blockBreak);
+        }
+    }
+
     @Override
     public void onBlockBreak(BlockBreak blockBreak) {
+        if (isRebreak(blockBreak) && allowsRebreak(rebreakType(blockBreak))) return;
         if (blockBreak.action == DiggingAction.START_DIGGING) {
             if (!ViaVersionUtil.isAvailable) {
                 // Exempt all blocks that do not exist in the player version

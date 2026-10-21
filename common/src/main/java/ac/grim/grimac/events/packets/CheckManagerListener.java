@@ -1,6 +1,7 @@
 package ac.grim.grimac.events.packets;
 
 import ac.grim.grimac.GrimAPI;
+import ac.grim.grimac.checks.impl.breaking.FastBreak;
 import ac.grim.grimac.checks.impl.badpackets.BadPacketsB;
 import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.update.*;
@@ -803,7 +804,9 @@ public class CheckManagerListener extends PacketListenerAbstract {
 
         final BlockBreak blockBreak = new BlockBreak(player, packet.getBlockPosition(), packet.getBlockFace(), packet.getBlockFaceId(), action, packet.getSequence(), player.compensatedWorld.getBlock(packet.getBlockPosition()));
 
-        player.checkManager.onBlockBreak(blockBreak);
+        FastBreak fastBreak = player.checkManager.get(FastBreak.class);
+        if (fastBreak.shouldModifyPackets() && fastBreak.isInvalidRebreak(blockBreak)) blockBreak.cancel();
+        else player.checkManager.onBlockBreak(blockBreak);
 
         if (blockBreak.isCancelled()) {
             event.setCancelled(true);
@@ -812,6 +815,7 @@ public class CheckManagerListener extends PacketListenerAbstract {
             return;
         }
 
+        fastBreak.onAcceptedBreak(blockBreak);
         player.queuedBreaks.add(blockBreak);
 
         if (action == DiggingAction.FINISHED_DIGGING && isBreakable(blockBreak.block.getType())) {
