@@ -62,6 +62,7 @@ public final class StrafeAllowance {
             Vector3dm movement = vanilla.vector.clone();
             VectorData source = vanilla;
             if (hopping && !vanilla.isKnockback() && !vanilla.isExplosion()) {
+                if (vanilla.isJump()) candidates.add(vanilla.returnNewModified(VectorData.VectorType.Strafe));
                 var jump = player.compensatedEntities.getPotionLevelForPlayer(PotionTypes.JUMP_BOOST);
                 movement.setY((0.40123128 + (jump.isPresent() ? (jump.getAsInt() + 1) * 0.1F : 0))
                         * vanilla.stuckSpeedMultiplier.getY());
