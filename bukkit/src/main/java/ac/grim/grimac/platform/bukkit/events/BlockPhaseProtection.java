@@ -90,7 +90,7 @@ public final class BlockPhaseProtection implements Listener {
 
     private static boolean closeToWall(Player player, Vector direction) {
         Location eye = player.getEyeLocation();
-        return obstructions(player, player.getLocation()) != 0 || direction.lengthSquared() > 0
+        return obstructions(player, player.getLocation(), 0.25) != 0 || direction.lengthSquared() > 0
                 && (!readable(eye.clone().add(direction.clone().normalize().multiply(0.75)))
                 || eye.getWorld().rayTraceBlocks(eye, direction.clone().normalize(), 0.75, FluidCollisionMode.NEVER, true) != null);
     }
@@ -136,9 +136,14 @@ public final class BlockPhaseProtection implements Listener {
 
     // 0 = clear, 1 = gravity blocks only, 2 = solid obstruction or unavailable region. Never loads chunks.
     static int obstructions(Player player, Location location) {
+        return obstructions(player, location, 0);
+    }
+
+    private static int obstructions(Player player, Location location, double margin) {
         Location current = player.getLocation();
         BoundingBox body = player.getBoundingBox().clone().shift(location.getX() - current.getX(),
-                location.getY() - current.getY(), location.getZ() - current.getZ()).expand(-1.0E-5);
+                location.getY() - current.getY(), location.getZ() - current.getZ())
+                .expand(margin, 0, margin, margin, margin, margin).expand(-1.0E-5);
         World world = location.getWorld();
         int result = 0;
         for (int x = (int) Math.floor(body.getMinX()); x <= Math.floor(body.getMaxX()); x++) {
