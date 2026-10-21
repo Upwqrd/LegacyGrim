@@ -167,7 +167,7 @@ public class FastBreak extends Check implements BlockBreakListener, PreViaPacket
             }
 
             // also set start time because the breaking netcode is fucked on 1.14.4+
-            lastFinishBreak = startBreak = System.currentTimeMillis();
+            if (!blockBreak.isCancelled()) lastFinishBreak = startBreak = System.currentTimeMillis();
         }
     }
 
