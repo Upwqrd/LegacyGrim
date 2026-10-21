@@ -142,6 +142,11 @@ public class FastBreak extends Check implements BlockBreakListener, PreViaPacket
         }
 
         if (blockBreak.action == DiggingAction.FINISHED_DIGGING && targetBlockPosition != null) {
+            // Silent tool swaps can occur after the last animation/flying packet, immediately before STOP.
+            if (blockBreak.position.equals(targetBlockPosition)) {
+                maximumBlockDamage = Math.max(maximumBlockDamage, BlockBreakSpeed.getBlockDamage(player,
+                        player.inventory.getHeldItem(), rebreakType(blockBreak)));
+            }
             double predictedTime = Math.ceil(1 / maximumBlockDamage) * 50;
             double realTime = System.currentTimeMillis() - startBreak;
             double diff = predictedTime - realTime;
