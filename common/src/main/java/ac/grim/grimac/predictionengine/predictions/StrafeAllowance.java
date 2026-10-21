@@ -11,7 +11,7 @@ import com.github.retrooper.packetevents.util.Vector3d;
 
 import java.util.List;
 
-/** Bounded Strafe up to 1.65, with prediction-owned speed and normal collisions. */
+/** Bounded Strafe for the recorded profiles, with prediction-owned speed and normal collisions. */
 public final class StrafeAllowance {
     private boolean previousHop, enabled, hopping, onIce;
     private double previousSpeed, limit, iceSpeed;
@@ -90,11 +90,11 @@ public final class StrafeAllowance {
     }
 
     static double groundSpeed(double base, boolean hopping) {
-        return Math.max(base, (1.18F * base - 0.01) * (hopping ? 1.65 : 1));
+        return Math.max(base, (1.18F * base - 0.01) * (hopping ? 1.63 : 1));
     }
 
     static double airSpeed(double base, double previous, boolean afterHop) {
-        return Math.max(base, afterHop ? previous - 0.76 * (previous - base) : previous * (158.0 / 159.0));
+        return Math.max(base, afterHop ? previous - 0.66 * (previous - base) : previous * (158.0 / 159.0));
     }
 
     static Vector3dm boundedMovement(Vector3dm physics, Vector3dm requested, double cap) {
