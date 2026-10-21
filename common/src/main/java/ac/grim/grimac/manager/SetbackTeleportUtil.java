@@ -171,20 +171,7 @@ public class SetbackTeleportUtil extends GrimProcessor implements PostPrediction
 
         Vector3dm clientVel = lastKnownGoodPosition.vector.clone();
 
-        Pair<VelocityData, Vector3dm> futureKb = player.checkManager.getKnockbackHandler().getFutureKnockback();
-        VelocityData futureExplosion = player.checkManager.getExplosionHandler().getFutureExplosion();
-
-        // Velocity sets
-        // Don't let player reuse setback velocity
-        if (futureKb.first() != null && !futureKb.first().isSetback) {
-            clientVel = futureKb.second();
-        }
-
-        // Explosion adds
-        if (futureExplosion != null && (futureKb.first() == null
-                || (futureKb.first().transaction < futureExplosion.transaction && !futureKb.first().isSetback))) {
-            clientVel.add(futureExplosion.vector);
-        }
+        // Velocity cancellation is allowed; do not reapply pending impulses during a setback.
 
         Vector3d position = lastKnownGoodPosition.pos;
 

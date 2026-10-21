@@ -13,11 +13,11 @@ import java.util.List;
 
 /** Meteor's default Strafe (1.6), with prediction-owned speed and normal collisions. */
 public final class StrafeAllowance {
-    private boolean active, previousHop, enabled, hopping, onIce;
+    private boolean previousHop, enabled, hopping, onIce;
     private double previousSpeed, limit, iceSpeed;
 
     public void reset() {
-        active = previousHop = enabled = false;
+        previousHop = enabled = false;
         previousSpeed = iceSpeed = 0;
     }
 
@@ -34,8 +34,6 @@ public final class StrafeAllowance {
             reset();
             return;
         }
-        // An air packet alone cannot start or restart the hop profile.
-        if (!active && !player.lastOnGround && iceSpeed == 0) return;
         double base = 0.2873;
         var speed = player.compensatedEntities.getPotionLevelForPlayer(PotionTypes.SPEED);
         var slowness = player.compensatedEntities.getPotionLevelForPlayer(PotionTypes.SLOWNESS);
@@ -83,15 +81,9 @@ public final class StrafeAllowance {
         if (!enabled) return;
         double predictedSpeed = Math.hypot(player.predictedVelocity.vector.getX(), player.predictedVelocity.vector.getZ());
         iceSpeed = Math.min(onIce ? limit : iceSpeed, predictedSpeed);
-        VectorData chosen = player.predictedVelocity.lastVector;
-        boolean selected = chosen != null && chosen.vectorType == VectorData.VectorType.Strafe;
-        if (selected || active) {
-            // Never feed unvalidated client distance back into the allowance.
-            previousSpeed = Math.min(limit, Math.hypot(player.predictedVelocity.vector.getX(),
-                    player.predictedVelocity.vector.getZ()));
-            previousHop = selected && hopping;
-            active = !player.onGround;
-        }
+        // Keep the validated profile even when an ordinary physics candidate wins.
+        previousSpeed = Math.min(limit, predictedSpeed);
+        previousHop = hopping;
     }
 
     static double groundSpeed(double base, boolean hopping) {
