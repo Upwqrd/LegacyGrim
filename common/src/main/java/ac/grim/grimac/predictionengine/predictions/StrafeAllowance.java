@@ -50,7 +50,7 @@ public final class StrafeAllowance {
         }
         limit = Math.max(iceSpeed, player.lastOnGround ? groundSpeed(base, hopping) : airSpeed(base, previousSpeed, previousHop));
         if (player.lastOnGround)
-            limit = Math.max(limit, hopping ? previousSpeed * 1.535 : airSpeed(base, previousSpeed, previousHop));
+            limit = Math.max(limit, hopping ? Math.min(previousSpeed * 1.535, base * (0.615615 / 0.2873)) : airSpeed(base, previousSpeed, previousHop));
         int count = candidates.size();
         for (int i = 0; i < count; i++) {
             VectorData vanilla = candidates.get(i);
