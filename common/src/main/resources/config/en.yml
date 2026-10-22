@@ -248,4 +248,4 @@ step-height: 1.0
 PearlPhasePrevention: true
 # Lift embedded players up by at most 2 blocks; thicker roofs and gravity blocks are ignored.
 PushOutOfBlocks: true
-CrystalPlaceLimit: 7
+CrystalPlaceLimit: 8

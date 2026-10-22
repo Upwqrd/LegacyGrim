@@ -247,4 +247,4 @@ step-height: 1.0
 PearlPhasePrevention: true
 # Поднимать из блоков максимум на 2 блока; толстая крыша и сыпучие блоки игнорируются.
 PushOutOfBlocks: true
-CrystalPlaceLimit: 7
+CrystalPlaceLimit: 8
