@@ -426,10 +426,7 @@ public class CheckManagerListener extends PacketListenerAbstract {
             player.packetStateData.lastPacketWasTeleport = teleportData.isTeleport();
 
             if (isPacketCritical(player, flying)) {
-                if (player.packetStateData.packetCriticalDenied) {
-                    event.setCancelled(true);
-                    player.onPacketCancel();
-                }
+                forwardPacketCritical(player, event, flying);
                 return;
             }
 
@@ -635,6 +632,26 @@ public class CheckManagerListener extends PacketListenerAbstract {
             player.packetStateData.resetPacketCriticalPair = true;
         }
         player.checkManager.onPacketSend(event);
+    }
+
+    static void forwardPacketCritical(GrimPlayer player, PacketReceiveEvent event, WrapperPlayClientPlayerFlying flying) {
+        if (player.packetStateData.packetCriticalDenied) {
+            event.setCancelled(true);
+            player.onPacketCancel();
+            return;
+        }
+        if (event.getServerVersion().isOlderThan(ServerVersion.V_26_3)) return;
+
+        // 26.3 rejects a second position packet before CLIENT_TICK_END. Only the
+        // already validated, rate-limited critical pair receives these boundaries.
+        // Replay after the PE decoder so synthetic boundaries are not Grim ticks.
+        var location = flying.getLocation();
+        var forwarded = new WrapperPlayClientPlayerFlying(true, false, flying.isOnGround(), flying.isHorizontalCollision(),
+                new Location(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch()));
+        event.setCancelled(true);
+        event.getUser().receivePacketSilently(new WrapperPlayClientClientTickEnd());
+        event.getUser().receivePacketSilently(forwarded);
+        event.getUser().receivePacketSilently(new WrapperPlayClientClientTickEnd());
     }
 
     private static boolean isPacketCritical(GrimPlayer player, WrapperPlayClientPlayerFlying flying) {
