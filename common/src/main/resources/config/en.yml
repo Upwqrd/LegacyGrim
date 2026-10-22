@@ -231,7 +231,6 @@ max-ping-firework-boost: 1000
 # Set to -1 to disable polling. Set to a positive value to refresh every X ticks.
 update-permission-ticks: -1
 
-# Schema markers — touch only if you know what you're doing.
 #   config-flavor:  V2 = Grim 2.x build, V3 = Grim 3.x. The plugin refuses
 #                   to load a config whose flavor doesn't match its own
 #                   build, so a V3 config opened by a V2 jar fails fast
@@ -241,11 +240,8 @@ update-permission-ticks: -1
 config-flavor: V2
 config-version: 11
 
-# Maximum allowed Step / ReverseStep height in blocks (0 disables the extra allowance, maximum 2).
 step-height: 1.0
 
-# Block pearls close to solid walls/ceilings; lift unsafe arrivals up by at most 2 blocks.
 PearlPhasePrevention: true
-# Lift embedded players up by at most 2 blocks; thicker roofs and gravity blocks are ignored.
 PushOutOfBlocks: true
 CrystalPlaceLimit: 8

@@ -54,7 +54,7 @@ public final class GlideSwapGuard implements Listener {
         int tick = Bukkit.getCurrentTick();
         Integer since = equippedSince.get(player.getUniqueId());
         if (since == null || tick - since >= 0 && tick - since < 2) {
-            event.setCancelled(true); // Folia sends the stopped-gliding metadata when the start is cancelled.
+            event.setCancelled(true);
         }
     }
 

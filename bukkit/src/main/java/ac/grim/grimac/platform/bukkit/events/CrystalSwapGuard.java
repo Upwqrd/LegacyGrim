@@ -35,7 +35,7 @@ public final class CrystalSwapGuard implements Listener {
         int elapsed = changed == null ? 1 : Bukkit.getCurrentTick() - changed;
         if (event.getPlayer().getInventory().getItem(event.getHand()).getType() != Material.END_CRYSTAL
                 || (event.getHand() == EquipmentSlot.HAND && elapsed >= 0 && elapsed < 1))
-            event.setCancelled(true); // Native crystal cancellation also resyncs inventory without consuming the item.
+            event.setCancelled(true);
         if (event.isCancelled()) return;
         int limit = GrimAPI.INSTANCE.getConfigManager().getConfig().getIntElse("CrystalPlaceLimit", 8);
         limitPlacement(event, limit, System.nanoTime());

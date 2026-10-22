@@ -156,7 +156,6 @@ bukkit {
         "FastLogin",
         "PlaceholderAPI",
         "LuckPerms",
-        // Driver holder mods — softdepend so each backend's driver class
         // resolves through the linked classloader.
         "sqlite-jdbc",
         "mysql-jdbc",

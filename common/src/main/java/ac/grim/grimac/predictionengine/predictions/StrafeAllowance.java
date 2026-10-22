@@ -69,7 +69,7 @@ public final class StrafeAllowance {
                 movement.setY(Math.max((0.4 + boost) * stuckY,
                         Math.min((0.42F + boost) * stuckY, player.actualMovement.getY())));
                 source = vanilla.returnNewModified(movement, VectorData.VectorType.Jump);
-                if (vanilla.isJump()) candidates.add(source); // Ordinary sprint-jump keeps its predicted X/Z.
+                if (vanilla.isJump()) candidates.add(source);
             }
             candidates.add(source.returnNewModified(movement, VectorData.VectorType.Strafe));
         }

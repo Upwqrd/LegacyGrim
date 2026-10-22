@@ -18,7 +18,7 @@ public class SprintC extends Check implements PostPredictionListener {
 
     @Override
     public boolean isApplicable() {
-        return false; // Sprinting while using items is allowed in this fork.
+        return false;
     }
 
     @Override
