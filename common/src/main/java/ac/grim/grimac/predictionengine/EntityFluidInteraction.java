@@ -294,7 +294,7 @@ public class EntityFluidInteraction {
                     current = VectorUtils.normalize(ClientVersion.V_26_1, current).multiply(0.0045000000000000005);
                 }
 
-                player.baseTickAddVector(current);
+                player.baseTickAddFluidPushing(current);
             }
         }
     }

@@ -231,6 +231,7 @@ public class GrimPlayer implements GrimUser {
     // Keep track of basetick stuff
     public final @NotNull Vector3dm baseTickAddition = new Vector3dm();
     public final @NotNull Vector3dm baseTickWaterPushing = new Vector3dm();
+    public final @NotNull Vector3dm baseTickFluidPushing = new Vector3dm();
     public @NotNull Vector3dm startTickClientVel = new Vector3dm();
     public @Nullable VelocityData firstBreadKB;
     public @Nullable VelocityData likelyKB;
@@ -458,6 +459,11 @@ public class GrimPlayer implements GrimUser {
 
     public void baseTickAddVector(Vector3dm vector) {
         clientVelocity.add(vector);
+    }
+
+    public void baseTickAddFluidPushing(Vector3dm vector) {
+        baseTickFluidPushing.add(vector);
+        baseTickAddVector(vector);
     }
 
     public void trackBaseTickAddition(Vector3dm vector) {

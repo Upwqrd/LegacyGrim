@@ -309,7 +309,8 @@ public class PredictionEngine {
     }
 
     public void addFluidPushingToStartingVectors(GrimPlayer player, Set<VectorData> data) {
-        for (VectorData vectorData : data) {
+        for (VectorData vectorData : new HashSet<>(data)) {
+            Vector3dm pushing = vectorData.isKnockback() ? player.baseTickWaterPushing : player.baseTickFluidPushing;
             // Sneaking in water
             if (vectorData.isKnockback() && player.baseTickAddition.lengthSquared() != 0) {
                 vectorData.vector = vectorData.vector.add(player.baseTickAddition);
@@ -323,9 +324,20 @@ public class PredictionEngine {
                     }
 
                     vectorData.vector = vectorData.vector.add(vec3);
+                    pushing = vec3;
                 } else {
                     vectorData.vector = vectorData.vector.add(player.baseTickWaterPushing);
+                    pushing = player.baseTickWaterPushing;
                 }
+            }
+            // Velocity Liquids: keep vanilla and allow cancelling only the applied current.
+            if (player.inVehicle() || pushing.lengthSquared() == 0 || vectorData.isTrident()
+                    || vectorData.isSwimHop() || vectorData.vectorType == VectorData.VectorType.Climbable) continue;
+            for (int axes = 1; axes <= 3; axes++) {
+                Vector3dm movement = vectorData.vector.clone();
+                if ((axes & 1) != 0) movement.subtract(pushing.getX(), 0, pushing.getZ());
+                if ((axes & 2) != 0) movement.setY(movement.getY() - pushing.getY());
+                data.add(vectorData.returnNewModified(movement, VectorData.VectorType.FluidPush));
             }
         }
     }
