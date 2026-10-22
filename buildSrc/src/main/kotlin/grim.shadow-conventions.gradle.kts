@@ -6,11 +6,8 @@ plugins {
 }
 
 tasks.named<ShadowJar>("shadowJar") {
-    // The self-contained jar includes providers loaded reflectively by PacketEvents
-    // and Adventure. Keep its complete runtime closure; static reachability is insufficient.
     if (!BuildConfig.shadePE) {
         minimize {
-            // These providers are reached only through ServiceLoader.
             exclude(dependency("net.kyori:adventure-text-serializer-gson:.*"))
             exclude(dependency("org.slf4j:slf4j-jdk14:.*"))
         }

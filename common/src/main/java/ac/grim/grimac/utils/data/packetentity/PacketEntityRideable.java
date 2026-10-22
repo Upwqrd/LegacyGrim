@@ -15,7 +15,7 @@ public class PacketEntityRideable extends PacketEntity {
 
     public PacketEntityRideable(GrimPlayer player, UUID uuid, EntityType type, double x, double y, double z) {
         super(player, uuid, type, x, y, z);
-        this.trackEntityEquipment = true; // Saddle equipment is authoritative on 1.21.5+.
+        this.trackEntityEquipment = true;
         setAttribute(Attributes.STEP_HEIGHT, 1.0f);
         trackAttribute(ValuedAttribute.ranged(Attributes.MOVEMENT_SPEED, 0.1f, 0, 1024));
     }

@@ -111,7 +111,7 @@ public final class BlockPhaseProtection implements Listener {
                 || !(pearl ? enabled("PearlPhasePrevention") : enabled("PushOutOfBlocks"))) return;
         Location current = player.getLocation();
         int obstruction = obstructions(player, current);
-        if (obstruction != 2) return; // Gravity blocks do not obstruct pearls or trigger pushing.
+        if (obstruction != 2) return;
         Location exit = null;
         for (int up = 1; up <= 3; up++) {
             Location candidate = current.clone();

@@ -94,7 +94,6 @@ if (gradle.startParameter.isBuildScan) {
 rootProject.name = "grimac"
 include("common")
 include("bukkit")
-// Optional platform scope for Bukkit/Folia verification; the default build still includes Fabric.
 if (!providers.gradleProperty("bukkitOnly").map(String::toBoolean).getOrElse(false)) {
     include("fabric")
     include(":fabric:shared")
