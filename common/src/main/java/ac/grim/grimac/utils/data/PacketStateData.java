@@ -13,7 +13,6 @@ public class PacketStateData {
     private long packetCriticalTime;
     private long packetCriticalBudget = 200_000_000L;
 
-    // Four pairs of burst, then at most twenty pairs/second; never use server ticks.
     public boolean allowPacketCritical(long now) {
         long elapsed = now - packetCriticalTime;
         packetCriticalTime = now;

@@ -19,7 +19,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.util.BoundingBox;
 
-/** Reject use actions inside full cubes; partial collision shapes and floor contact are allowed. */
 public final class EmbeddedInteractionGuard implements Listener {
     static boolean blocked(Player player) {
         if (player.getGameMode() == GameMode.SPECTATOR) return false;
@@ -36,7 +35,6 @@ public final class EmbeddedInteractionGuard implements Listener {
                     var shapes = block.getCollisionShape().getBoundingBoxes();
                     if (shapes.size() != 1) continue;
                     var shape = shapes.iterator().next();
-                    // Occlusion/solid flags also include partial blocks or exclude full glass cubes.
                     if (shape.equals(new BoundingBox(0, 0, 0, 1, 1, 1)) && body.overlaps(shape.clone().shift(x, y, z))) return true;
                 }
             }

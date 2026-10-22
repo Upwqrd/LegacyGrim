@@ -105,8 +105,6 @@ public class PredictionEngine {
         for (VectorData clientVelAfterInput : possibleVelocities) {
             Vector3dm primaryPushMovement = handleStartingVelocityUncertainty(player, clientVelAfterInput, player.actualMovement);
             if (clientVelAfterInput.vectorType == VectorData.VectorType.EntitySpeed) {
-                // Apply the circular horizontal limit AFTER uncertainty, BEFORE collisions.
-                // Y still comes exclusively from Grim's normal physics prediction.
                 primaryPushMovement = EntitySpeedAllowance.horizontalMovement(
                         primaryPushMovement, player.actualMovement, clientVelAfterInput.stuckSpeedMultiplier);
             }
@@ -330,7 +328,6 @@ public class PredictionEngine {
                     pushing = player.baseTickWaterPushing;
                 }
             }
-            // Velocity Liquids: keep vanilla and allow cancelling only the applied current.
             if (player.inVehicle() || pushing.lengthSquared() == 0 || vectorData.isTrident()
                     || vectorData.isSwimHop() || vectorData.vectorType == VectorData.VectorType.Climbable) continue;
             for (int axes = 1; axes <= 3; axes++) {

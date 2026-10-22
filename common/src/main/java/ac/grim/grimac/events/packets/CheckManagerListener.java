@@ -654,7 +654,6 @@ public class CheckManagerListener extends PacketListenerAbstract {
         Vector3d position = flying.getLocation().getPosition();
         if (position.getX() != player.x || position.getZ() != player.z) return false;
         if (rise && position.getY() == player.y) return true;
-        // Bounded 1/16-block rise and return, including client epsilon; these are not extra physics ticks.
         if (rise || !(position.getY() >= player.y + 0.0625 && position.getY() <= player.y + 0.0626)
                 || Collisions.isEmpty(player, new SimpleCollisionBox(player.boundingBox.minX, player.y - 1.0E-5, player.boundingBox.minZ,
                 player.boundingBox.maxX, player.y, player.boundingBox.maxZ))
@@ -859,7 +858,6 @@ public class CheckManagerListener extends PacketListenerAbstract {
         fastBreak.onAcceptedBreak(blockBreak);
         player.queuedBreaks.add(blockBreak);
 
-        // Creative mining only destroys on START; STOP must not create ghost air (FastWeb).
         if (action == DiggingAction.FINISHED_DIGGING && player.gamemode != GameMode.CREATIVE && isBreakable(blockBreak.block.getType())) {
             player.compensatedWorld.startPredicting();
             player.compensatedWorld.updateBlock(blockBreak.position.x, blockBreak.position.y, blockBreak.position.z, 0);
