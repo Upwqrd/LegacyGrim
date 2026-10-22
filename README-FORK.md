@@ -1,8 +1,8 @@
 # LegacyGrim: описание форка для администратора
 
-Ветка **port/26.3** сохраняет все закоммиченные правила исходной ветки ниже. Целевая среда этой ветки — **Canvas/Folia 26.3, Java 25**. Состав переноса, сборка и границы проверки описаны в [PORT-26.3.md](PORT-26.3.md).
+Ветка **folia-26.3-audited** (локальная рабочая ветка `port/26.3`) сохраняет все закоммиченные правила исходной ветки ниже. Целевая среда этой ветки — **Canvas/Folia 26.3, Java 25**. Состав переноса, сборка и границы проверки описаны в [PORT-26.3.md](PORT-26.3.md).
 
-Целевая платформа: **Folia 1.21.11**. Ветка форка — [folia-1.21.11-audited](https://github.com/Upwqrd/LegacyGrim/tree/folia-1.21.11-audited).
+Исходная платформа правил: **Folia 1.21.11**. Исходная ветка форка — [folia-1.21.11-audited](https://github.com/Upwqrd/LegacyGrim/tree/folia-1.21.11-audited).
 GitHub подтверждает, что Upwqrd/LegacyGrim является форком GrimAnticheat/Grim.
 
 - [Все изменения относительно исходного Grim](https://github.com/GrimAnticheat/Grim/compare/8baa16f2b55d188eea81436aaa484d19b61085cd...Upwqrd:LegacyGrim:folia-1.21.11-audited).
@@ -77,7 +77,7 @@ PushOutOfBlocks: true
 Используйте Gradle Wrapper и JDK, позволяющий выбрать настроенный toolchain Java 21. Собственные классы проекта компилируются с `--release 17`. Для запуска Folia учитывайте требования самой версии сервера.
 
 ```powershell
-git clone --branch folia-1.21.11-audited https://github.com/Upwqrd/LegacyGrim.git
+git clone --branch folia-26.3-audited https://github.com/Upwqrd/LegacyGrim.git
 cd LegacyGrim
 .\gradlew.bat :common:build :bukkit:build -x spotlessApply -PbukkitOnly=true -PshadePE=true -Prelease=true --no-configuration-cache
 ```
