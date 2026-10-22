@@ -12,15 +12,13 @@ import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class CrystalSwapGuard implements Listener {
     private final Map<UUID, Integer> slotChanges = new ConcurrentHashMap<>();
-    private final Map<UUID, Deque<Placement>> placements = new ConcurrentHashMap<>();
+    private final Map<UUID, Placement> placements = new ConcurrentHashMap<>();
 
     private record Placement(long time, EntityPlaceEvent event) {}
 
@@ -39,15 +37,19 @@ public final class CrystalSwapGuard implements Listener {
                 || (event.getHand() == EquipmentSlot.HAND && elapsed >= 0 && elapsed < 1))
             event.setCancelled(true); // Native crystal cancellation also resyncs inventory without consuming the item.
         if (event.isCancelled()) return;
-        int limit = GrimAPI.INSTANCE.getConfigManager().getConfig().getIntElse("CrystalPlaceLimit", 7);
+        int limit = GrimAPI.INSTANCE.getConfigManager().getConfig().getIntElse("CrystalPlaceLimit", 8);
+        limitPlacement(event, limit, System.nanoTime());
+    }
+
+    private void limitPlacement(EntityPlaceEvent event, int limit, long now) {
         if (limit <= 0) return;
-        Deque<Placement> budget = placements.computeIfAbsent(event.getPlayer().getUniqueId(), id -> new ArrayDeque<>());
-        synchronized (budget) {
-            long now = System.nanoTime();
-            budget.removeIf(p -> now - p.time() >= 1_000_000_000L || p.event().isCancelled());
-            if (budget.size() >= limit) event.setCancelled(true);
-            else budget.addLast(new Placement(now, event));
-        }
+        long interval = (1_000_000_000L + limit - 1) / limit;
+        placements.compute(event.getPlayer().getUniqueId(), (id, last) -> {
+            boolean active = last != null && !last.event().isCancelled();
+            if (active && now - last.time() < 0) { event.setCancelled(true); return last; }
+            long next = active && now - last.time() <= Math.min(interval / 2, 50_000_000L) ? last.time() : now;
+            return new Placement(next + interval, event);
+        });
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
