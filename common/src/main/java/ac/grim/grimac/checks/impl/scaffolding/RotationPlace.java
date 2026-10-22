@@ -12,6 +12,7 @@ import ac.grim.grimac.utils.data.Pair;
 import ac.grim.grimac.utils.nmsutil.Ray;
 import ac.grim.grimac.utils.nmsutil.ReachUtils;
 import com.github.retrooper.packetevents.protocol.attribute.Attributes;
+import com.github.retrooper.packetevents.protocol.item.type.ItemTypes;
 import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import com.github.retrooper.packetevents.protocol.world.BlockFace;
 import com.github.retrooper.packetevents.protocol.world.states.type.StateTypes;
@@ -36,6 +37,7 @@ public class RotationPlace extends BlockPlaceCheck implements BlockPlaceListener
 
     @Override
     public void onBlockPlace(final BlockPlace place) {
+        if (place.itemStack.getType() == ItemTypes.END_CRYSTAL) return;
         if (place.material == StateTypes.SCAFFOLDING) return;
         if (!player.cameraEntity.isSelf())
             return; // you don't send flying packets when spectating entities
@@ -52,6 +54,7 @@ public class RotationPlace extends BlockPlaceCheck implements BlockPlaceListener
     // Use post flying because it has the correct rotation, and can't false easily.
     @Override
     public void onPostFlyingBlockPlace(BlockPlace place) {
+        if (place.itemStack.getType() == ItemTypes.END_CRYSTAL) return;
         if (place.material == StateTypes.SCAFFOLDING) return;
         if (!player.cameraEntity.isSelf())
             return; // you don't send flying packets when spectating entities
