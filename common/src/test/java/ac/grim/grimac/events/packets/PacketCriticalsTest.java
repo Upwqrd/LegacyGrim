@@ -22,9 +22,13 @@ import static org.mockito.Mockito.*;
 
 class PacketCriticalsTest {
     @BeforeAll static void packets() {
+        initializePackets(ServerVersion.V_1_21_11);
+    }
+
+    static void initializePackets(ServerVersion version) {
         var api = mock(PacketEventsAPI.class); var server = mock(ServerManager.class);
         when(api.getServerManager()).thenReturn(server);
-        when(server.getVersion()).thenReturn(ServerVersion.V_1_21_11);
+        when(server.getVersion()).thenReturn(version);
         when(api.getSettings()).thenReturn(new com.github.retrooper.packetevents.settings.PacketEventsSettings());
         when(api.getNettyManager()).thenReturn(new io.github.retrooper.packetevents.impl.netty.NettyManagerImpl());
         when(api.getLogManager()).thenReturn(mock(com.github.retrooper.packetevents.util.LogManager.class));
@@ -163,7 +167,8 @@ class PacketCriticalsTest {
     @Test void acceptedReturnDoesNotSpendAnotherTokenIncludingLegacyClients() throws Exception {
         for (var version : new com.github.retrooper.packetevents.protocol.player.ClientVersion[]{
                 com.github.retrooper.packetevents.protocol.player.ClientVersion.V_1_8,
-                com.github.retrooper.packetevents.protocol.player.ClientVersion.V_1_21_11}) {
+                com.github.retrooper.packetevents.protocol.player.ClientVersion.V_1_21_11,
+                com.github.retrooper.packetevents.protocol.player.ClientVersion.V_26_3}) {
             Fixture f = new Fixture();
             when(f.player.getClientVersion()).thenReturn(version);
             try (var collisions = mockStatic(Collisions.class)) {

@@ -1,5 +1,7 @@
 # LegacyGrim: описание форка для администратора
 
+Ветка **port/26.3** сохраняет все закоммиченные правила исходной ветки ниже. Целевая среда этой ветки — **Canvas/Folia 26.3, Java 25**. Состав переноса, сборка и границы проверки описаны в [PORT-26.3.md](PORT-26.3.md).
+
 Целевая платформа: **Folia 1.21.11**. Ветка форка — [folia-1.21.11-audited](https://github.com/Upwqrd/LegacyGrim/tree/folia-1.21.11-audited).
 GitHub подтверждает, что Upwqrd/LegacyGrim является форком GrimAnticheat/Grim.
 
@@ -82,6 +84,6 @@ cd LegacyGrim
 
 На Linux используется `./gradlew` с теми же аргументами. `-x spotlessApply` исключает автоматическое переписывание исходников; проверки форматирования, тесты, JavaDoc и JAR остаются включены. Без необязательного bukkitOnly стандартная конфигурация по-прежнему включает Fabric.
 
-Самодостаточный плагин: `bukkit/build/libs/grimac-bukkit-2.3.75.jar`. Sources/JavaDoc JAR не являются серверным плагином. Задача `:bukkit:verifyBundledServiceProviders` проверяет сохранность ServiceLoader-провайдеров после shading и входит в check.
+Самодостаточный плагин этой ветки: `bukkit/build/libs/grimac-bukkit-2.3.75-26.3-port.jar`. Sources/JavaDoc JAR не являются серверным плагином. Задача `:bukkit:verifyBundledServiceProviders` проверяет сохранность ServiceLoader-провайдеров после shading и входит в check.
 
 Приведённая команда собирает Bukkit/Folia-вариант с включённым PacketEvents. Она не предназначена для сборки Lite или Fabric. Лицензия и исходная документация upstream сохранены.
