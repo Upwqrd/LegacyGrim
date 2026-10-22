@@ -171,7 +171,6 @@ public class SetbackTeleportUtil extends GrimProcessor implements PostPrediction
 
         Vector3dm clientVel = lastKnownGoodPosition.vector.clone();
 
-        // Velocity cancellation is allowed; do not reapply pending impulses during a setback.
 
         Vector3d position = lastKnownGoodPosition.pos;
 

@@ -87,7 +87,6 @@ public class FastBreak extends Check implements BlockBreakListener, PreViaPacket
     }
 
     public void onAcceptedBreak(BlockBreak blockBreak) {
-        // Only an accepted START resets consumed progress; vanilla may resume after CANCEL without START.
         if (blockBreak.action == DiggingAction.START_DIGGING) {
             StateType server = player.compensatedWorld.getServerBlock(blockBreak.position).getType();
             if (blockBreak.position.y < player.compensatedWorld.getMinHeight()
@@ -152,7 +151,6 @@ public class FastBreak extends Check implements BlockBreakListener, PreViaPacket
         }
 
         if (blockBreak.action == DiggingAction.FINISHED_DIGGING && targetBlockPosition != null) {
-            // Silent tool swaps can occur after the last animation/flying packet, immediately before STOP.
             if (blockBreak.position.equals(targetBlockPosition)) {
                 maximumBlockDamage = Math.max(maximumBlockDamage, BlockBreakSpeed.getBlockDamage(player,
                         player.inventory.getHeldItem(), rebreakType(blockBreak)));

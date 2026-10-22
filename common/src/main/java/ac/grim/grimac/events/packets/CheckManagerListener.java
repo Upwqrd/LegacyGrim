@@ -642,9 +642,6 @@ public class CheckManagerListener extends PacketListenerAbstract {
         }
         if (event.getServerVersion().isOlderThan(ServerVersion.V_26_3)) return;
 
-        // 26.3 rejects a second position packet before CLIENT_TICK_END. Only the
-        // already validated, rate-limited critical pair receives these boundaries.
-        // Replay after the PE decoder so synthetic boundaries are not Grim ticks.
         var location = flying.getLocation();
         var forwarded = new WrapperPlayClientPlayerFlying(true, false, flying.isOnGround(), flying.isHorizontalCollision(),
                 new Location(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch()));
@@ -671,7 +668,6 @@ public class CheckManagerListener extends PacketListenerAbstract {
         Vector3d position = flying.getLocation().getPosition();
         if (position.getX() != player.x || position.getZ() != player.z) return false;
         if (rise && position.getY() == player.y) return true;
-        // Bounded 1/16-block rise and return, including client epsilon; these are not extra physics ticks.
         if (rise || !(position.getY() >= player.y + 0.0625 && position.getY() <= player.y + 0.0626)
                 || Collisions.isEmpty(player, new SimpleCollisionBox(player.boundingBox.minX, player.y - 1.0E-5, player.boundingBox.minZ,
                 player.boundingBox.maxX, player.y, player.boundingBox.maxZ))
@@ -876,7 +872,6 @@ public class CheckManagerListener extends PacketListenerAbstract {
         fastBreak.onAcceptedBreak(blockBreak);
         player.queuedBreaks.add(blockBreak);
 
-        // Creative mining only destroys on START; STOP must not create ghost air (FastWeb).
         if (action == DiggingAction.FINISHED_DIGGING && player.gamemode != GameMode.CREATIVE && isBreakable(blockBreak.block.getType())) {
             player.compensatedWorld.startPredicting();
             player.compensatedWorld.updateBlock(blockBreak.position.x, blockBreak.position.y, blockBreak.position.z, 0);

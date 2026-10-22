@@ -597,7 +597,6 @@ public class GrimPlayer implements GrimUser {
             updatePermissions();
         }
 
-        // Datastore session heartbeat — throttled internally to once per
         // `database.session.heartbeat-interval-ms`, so this runs every tick
         // but only emits a row upsert every N seconds. Bounds how stale
         // last_activity_epoch_ms can be when the server crashes.

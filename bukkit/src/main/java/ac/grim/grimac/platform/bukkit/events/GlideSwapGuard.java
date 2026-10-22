@@ -44,7 +44,6 @@ public final class GlideSwapGuard implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onInventory(InventoryClickEvent event) {
-        // A burst can restore the original chest item before equipment updates observe it.
         if (event.getWhoClicked() instanceof Player player && event.getSlotType() == InventoryType.SlotType.ARMOR
                 && event.getSlot() == 38) equippedSince.put(player.getUniqueId(), Bukkit.getCurrentTick());
     }
@@ -54,7 +53,6 @@ public final class GlideSwapGuard implements Listener {
         if (!event.isGliding() || !(event.getEntity() instanceof Player player) || !hasElytra(player)) return;
         int tick = Bukkit.getCurrentTick();
         Integer since = equippedSince.get(player.getUniqueId());
-        // An equip/start/unequip burst never establishes a worn elytra for a full server tick.
         if (since == null || tick - since >= 0 && tick - since < 2) {
             event.setCancelled(true); // Folia sends the stopped-gliding metadata when the start is cancelled.
         }

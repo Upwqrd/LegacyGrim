@@ -11,7 +11,6 @@ import com.github.retrooper.packetevents.util.Vector3d;
 
 import java.util.List;
 
-/** Bounded Strafe for the recorded profiles, with prediction-owned speed and normal collisions. */
 public final class StrafeAllowance {
     private boolean previousHop, enabled, hopping, onIce, landed;
     private double previousSpeed, limit, iceSpeed;
@@ -59,9 +58,6 @@ public final class StrafeAllowance {
                     || vanilla.isFlipSneaking() || !finite(vanilla.vector)
                     || vanilla.input == null
                     || vanilla.input.lengthSquared() == 0 && !player.supportsEndTickPreVia()) continue;
-            // Explicit key reports can be idle while a supported profile steers or brakes.
-            // Legacy clients already search nonzero input alternatives for the same tick.
-            // Ice credit comes only from an ordinary physics candidate, never client distance.
             if (onIce && !vanilla.isKnockback() && !vanilla.isExplosion())
                 limit = Math.max(limit, Math.hypot(vanilla.vector.getX(), vanilla.vector.getZ()));
             Vector3dm movement = vanilla.vector.clone();
@@ -82,7 +78,6 @@ public final class StrafeAllowance {
     public Vector3dm movement(VectorData candidate, Vector3dm physics, Vector3dm requested) {
         double cap = limit * Math.max(0, Math.min(1,
                 Math.min(candidate.stuckSpeedMultiplier.getX(), candidate.stuckSpeedMultiplier.getZ())));
-        // Ordinary physics keeps its speed when steering, without seeding extra profile momentum.
         if (!candidate.isKnockback() && !candidate.isExplosion())
             cap = Math.max(cap, Math.hypot(physics.getX(), physics.getZ()));
         return boundedMovement(physics, requested, cap);
@@ -90,13 +85,10 @@ public final class StrafeAllowance {
 
     public void finish(GrimPlayer player) {
         if (!enabled) return;
-        // Landing resolves Y before X/Z: the same tick may carry the player off the edge.
-        // MovementTicker rebuilds BestVelPicked: its input survives in lastVector, not preUncertainty.
         landed = player.onGround && player.verticalCollision && player.predictedVelocity.lastVector != null
                 && player.predictedVelocity.lastVector.vector.getY() < 0;
         double predictedSpeed = Math.hypot(player.predictedVelocity.vector.getX(), player.predictedVelocity.vector.getZ());
         iceSpeed = Math.min(onIce ? limit : iceSpeed, predictedSpeed);
-        // Keep the validated profile even when an ordinary physics candidate wins.
         previousSpeed = Math.min(limit, predictedSpeed);
         previousHop = hopping;
     }

@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Server collision shapes, checked only on the player's owning region. */
 public final class BlockPhaseProtection implements Listener {
     private final Map<UUID, State> states = new ConcurrentHashMap<>();
 
@@ -102,7 +101,6 @@ public final class BlockPhaseProtection implements Listener {
         State state = states.get(player.getUniqueId());
         if (state == null || state.pending) return;
         long teleport = ++state.teleport;
-        // A pearl may cross regions: inspect the destination after arrival on the entity scheduler.
         GrimAPI.INSTANCE.getScheduler().getEntityScheduler().execute(new BukkitGrimEntity(player), GrimAPI.INSTANCE.getGrimPlugin(),
                 () -> { if (state.teleport == teleport) check(player, pearl); }, null, 1);
     }
@@ -115,7 +113,6 @@ public final class BlockPhaseProtection implements Listener {
         int obstruction = obstructions(player, current);
         if (obstruction != 2) return; // Gravity blocks do not obstruct pearls or trigger pushing.
         Location exit = null;
-        // Only lift at the arrival position. A roof requiring more than three blocks is left untouched.
         for (int up = 1; up <= 3; up++) {
             Location candidate = current.clone();
             candidate.setY(Math.floor(current.getY()) + up);
@@ -132,7 +129,6 @@ public final class BlockPhaseProtection implements Listener {
         return world.isChunkLoaded(x, z) && (GrimAPI.INSTANCE.getPlatform() != Platform.FOLIA || Bukkit.isOwnedByCurrentRegion(world, x, z));
     }
 
-    // 0 = clear, 1 = gravity blocks only, 2 = solid obstruction or unavailable region. Never loads chunks.
     static int obstructions(Player player, Location location) {
         return obstructions(player, location, null);
     }
@@ -149,7 +145,6 @@ public final class BlockPhaseProtection implements Listener {
         for (int x = (int) Math.floor(body.getMinX()); x <= Math.floor(body.getMaxX()); x++) {
             for (int z = (int) Math.floor(body.getMinZ()); z <= Math.floor(body.getMaxZ()); z++) {
                 if (!readable(new Location(world, x, location.getY(), z))) return 2;
-                // Fences and walls can extend above their owning block.
                 for (int y = Math.max(world.getMinHeight(), (int) Math.floor(body.getMinY()) - 1);
                      y <= Math.min(world.getMaxHeight() - 1, Math.floor(body.getMaxY())); y++) {
                     Block block = world.getBlockAt(x, y, z);
@@ -157,7 +152,6 @@ public final class BlockPhaseProtection implements Listener {
                     for (BoundingBox shape : block.getCollisionShape().getBoundingBoxes()) {
                         shape = shape.clone().shift(x, y, z);
                         if (!body.overlaps(shape)) continue;
-                        // Sweep nearby shapes far enough to include diagonal floor hits beyond the first tick.
                         if (direction != null && shape.expand(0.125).rayTrace(origin, direction, 2.0) == null) continue;
                         if (!block.getType().hasGravity()) return 2;
                         result = 1;

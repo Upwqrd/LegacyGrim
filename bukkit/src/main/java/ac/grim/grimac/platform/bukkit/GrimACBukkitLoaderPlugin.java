@@ -148,7 +148,6 @@ public final class GrimACBukkitLoaderPlugin extends JavaPlugin implements Platfo
         final EventBus eventBus = externalAPI.getEventBus();
         final ac.grim.grimac.api.plugin.GrimPlugin plugin = GrimAPI.INSTANCE.getGrimPlugin();
 
-        // Bridge Grim events → legacy Bukkit Event API so pre-1.3 plugins that
         // listened for ac.grim.grimac.api.events.* Bukkit events keep working.
         // Typed channel subscriptions here are plugin-bound so they go away if
         // GrimAC itself is disabled.

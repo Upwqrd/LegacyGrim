@@ -17,9 +17,7 @@ import com.github.retrooper.packetevents.protocol.player.EquipmentSlot;
 
 import java.util.List;
 
-/** Horizontal EntitySpeed permission for the 2b2t.org.ru fork. No check exemptions. */
 public final class EntitySpeedAllowance {
-    // 1 block = 1 metre, 20 ticks/second: 60 / 3.6 / 20.
     public static final double MAX_BLOCKS_PER_TICK = 60.0 / 72.0;
 
     private EntitySpeedAllowance() {
@@ -48,13 +46,11 @@ public final class EntitySpeedAllowance {
                     || vanilla.isZeroPointZeroThree() || !finite(vanilla.vector)) {
                 continue;
             }
-            // Keep every vanilla candidate, its vertical physics and its provenance intact.
             candidates.add(vanilla.returnNewModified(vanilla.vector.clone(), VectorData.VectorType.EntitySpeed));
         }
     }
 
     static boolean canControl(GrimPlayer player, PacketEntity riding) {
-        // Grant the permission only to the actual first passenger of a non-stacked vehicle.
         if (riding.getRiding() != null || riding.passengers.isEmpty()
                 || riding.passengers.get(0) != player.compensatedEntities.self) {
             return false;
@@ -75,7 +71,6 @@ public final class EntitySpeedAllowance {
     }
 
     public static Vector3dm horizontalMovement(Vector3dm physics, Vector3dm requested, IndexedVector3d stuck) {
-        // Respect cobweb/bush slowdown. Clamp the combined XZ length, not each axis.
         double limit = MAX_BLOCKS_PER_TICK * Math.max(0, Math.min(1, Math.min(stuck.getX(), stuck.getZ())));
         if (!finite(physics) || !finite(requested) || !Double.isFinite(limit)) {
             return physics.clone();

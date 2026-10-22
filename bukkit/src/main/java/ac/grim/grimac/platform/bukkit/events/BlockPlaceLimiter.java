@@ -41,10 +41,8 @@ public final class BlockPlaceLimiter implements Listener {
                 budget.tick = tick;
                 budget.attempts.clear();
             }
-            // Inspect final outcomes lazily, including cancellations by later listeners.
             budget.attempts.removeIf(a -> a.finished && (a.event.isCancelled() || !a.event.canBuild()));
             if (budget.attempts.size() >= 2) {
-                // Folia/Paper rolls back all captured blocks and resyncs the used inventory slot.
                 event.setCancelled(true);
             } else {
                 budget.attempts.add(new Attempt(event));
@@ -57,7 +55,6 @@ public final class BlockPlaceLimiter implements Listener {
         Budget budget = budgets.get(event.getPlayer().getUniqueId());
         if (budget == null) return;
         synchronized (budget) {
-            // In-flight reservations still count during reentrant plugin callbacks.
             for (Attempt attempt : budget.attempts) if (attempt.event == event) attempt.finished = true;
         }
     }
