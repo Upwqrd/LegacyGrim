@@ -425,7 +425,13 @@ public class CheckManagerListener extends PacketListenerAbstract {
             teleportData = !TELEPORT_CONTAINS_POSITION && flying.hasPositionChanged() && flying.hasRotationChanged() ? player.getSetbackTeleportUtil().checkTeleportQueue(position.getX(), position.getY(), position.getZ(), location.getYaw(), location.getPitch()) : new TeleportAcceptData();
             player.packetStateData.lastPacketWasTeleport = teleportData.isTeleport();
 
-            if (isPacketCritical(player, flying)) return;
+            if (isPacketCritical(player, flying)) {
+                if (player.packetStateData.packetCriticalDenied) {
+                    event.setCancelled(true);
+                    player.onPacketCancel();
+                }
+                return;
+            }
 
             if (flying.hasRotationChanged() && !flying.hasPositionChanged() && !flying.isOnGround() && !flying.isHorizontalCollision()) {
                 RotationData data = player.pendingRotations.peek();
@@ -624,10 +630,18 @@ public class CheckManagerListener extends PacketListenerAbstract {
         if (event.getConnectionState() != ConnectionState.PLAY) return;
         GrimPlayer player = GrimAPI.INSTANCE.getPlayerDataManager().getPlayer(event.getUser());
         if (player == null) return;
+        if (event.getPacketType() == PacketType.Play.Server.PLAYER_POSITION_AND_LOOK
+                || event.getPacketType() == PacketType.Play.Server.RESPAWN) {
+            player.packetStateData.resetPacketCriticalPair = true;
+        }
         player.checkManager.onPacketSend(event);
     }
 
     private static boolean isPacketCritical(GrimPlayer player, WrapperPlayClientPlayerFlying flying) {
+        if (player.packetStateData.resetPacketCriticalPair) {
+            player.packetStateData.resetPacketCriticalPair = false;
+            player.packetStateData.packetCriticalRise = false;
+        }
         boolean rise = player.packetStateData.packetCriticalRise;
         player.packetStateData.packetCriticalRise = false;
         if (!flying.hasPositionChanged() || flying.hasRotationChanged() || flying.isOnGround()
@@ -645,6 +659,7 @@ public class CheckManagerListener extends PacketListenerAbstract {
                 || Collisions.isEmpty(player, new SimpleCollisionBox(player.boundingBox.minX, player.y - 1.0E-5, player.boundingBox.minZ,
                 player.boundingBox.maxX, player.y, player.boundingBox.maxZ))
                 || !Collisions.isEmpty(player, player.boundingBox.copy().expandToCoordinate(0, 0.0626, 0).expand(-Collisions.COLLISION_EPSILON))) return false;
+        player.packetStateData.packetCriticalDenied = !player.packetStateData.allowPacketCritical(System.nanoTime());
         player.packetStateData.packetCriticalRise = true;
         return true;
     }

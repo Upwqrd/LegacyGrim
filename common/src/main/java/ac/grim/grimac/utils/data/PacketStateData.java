@@ -8,7 +8,20 @@ import lombok.Getter;
 // Helps clean up the player class and makes devs aware they are sync'd to the netty thread
 public class PacketStateData {
     public boolean packetPlayerOnGround = false;
-    public boolean packetCriticalRise;
+    public boolean packetCriticalRise, packetCriticalDenied;
+    public volatile boolean resetPacketCriticalPair;
+    private long packetCriticalTime;
+    private long packetCriticalBudget = 200_000_000L;
+
+    // Four pairs of burst, then at most twenty pairs/second; never use server ticks.
+    public boolean allowPacketCritical(long now) {
+        long elapsed = now - packetCriticalTime;
+        packetCriticalTime = now;
+        if (elapsed > 0) packetCriticalBudget += Math.min(elapsed, 200_000_000L - packetCriticalBudget);
+        if (packetCriticalBudget < 50_000_000L) return false;
+        packetCriticalBudget -= 50_000_000L;
+        return true;
+    }
     public boolean lastPacketWasTeleport = false;
     public boolean cancelDuplicatePacket, lastPacketWasOnePointSeventeenDuplicate = false;
     public boolean lastTransactionPacketWasValid = false;
