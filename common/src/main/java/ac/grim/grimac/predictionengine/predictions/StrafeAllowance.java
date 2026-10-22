@@ -23,7 +23,7 @@ public final class StrafeAllowance {
     public void addCandidates(GrimPlayer player, List<VectorData> candidates, boolean normalMovement) {
         enabled = normalMovement && !player.inVehicle() && !player.isFlying && !player.isGliding
                 && !player.wasFlying && !player.wasGliding && !player.isClimbing && !player.isSwimming
-                && !player.wasTouchingWater && !player.wasTouchingLava && !player.isSneaking
+                && !player.wasTouchingWater && !player.isSneaking
                 && player.hasGravity
                 && !player.uncertaintyHandler.influencedByBouncyBlock()
                 && !player.packetStateData.tryingToRiptide
