@@ -47,6 +47,7 @@ public final class PlayerBaseTick {
         // Keep track of basetick stuff
         player.baseTickAddition.zero();
         player.baseTickWaterPushing.zero();
+        player.baseTickFluidPushing.zero();
 
         if (player.isFlying && player.isSneaking && !player.inVehicle()) {
             Vector3dm flyingShift = new Vector3dm(0, player.flySpeed * -3, 0);
@@ -459,7 +460,7 @@ public final class PlayerBaseTick {
             vec3 = VectorUtils.normalize(player, vec3);
             vec3.multiply(multiplier);
             player.baseTickAddWaterPushing(vec3);
-            player.baseTickAddVector(vec3);
+            player.baseTickAddFluidPushing(vec3);
         }
 
         return hasPushed;
@@ -533,7 +534,7 @@ public final class PlayerBaseTick {
                     vec3 = VectorUtils.normalize(player, vec3).multiply(0.0045000000000000005);
                 }
 
-                player.baseTickAddVector(vec3);
+                player.baseTickAddFluidPushing(vec3);
             }
         }
 
