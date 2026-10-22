@@ -57,7 +57,10 @@ public final class StrafeAllowance {
             VectorData vanilla = candidates.get(i);
             if (vanilla.isTrident() || vanilla.isZeroPointZeroThree() || vanilla.isSwimHop()
                     || vanilla.isFlipSneaking() || !finite(vanilla.vector)
-                    || vanilla.input == null || vanilla.input.lengthSquared() == 0) continue;
+                    || vanilla.input == null
+                    || vanilla.input.lengthSquared() == 0 && !player.supportsEndTickPreVia()) continue;
+            // Explicit key reports can be idle while a supported profile steers or brakes.
+            // Legacy clients already search nonzero input alternatives for the same tick.
             // Ice credit comes only from an ordinary physics candidate, never client distance.
             if (onIce && !vanilla.isKnockback() && !vanilla.isExplosion())
                 limit = Math.max(limit, Math.hypot(vanilla.vector.getX(), vanilla.vector.getZ()));
