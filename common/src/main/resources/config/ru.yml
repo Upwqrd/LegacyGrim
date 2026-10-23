@@ -244,4 +244,4 @@ step-height: 1.0
 
 PearlPhasePrevention: true
 PushOutOfBlocks: true
-CrystalPlaceLimit: 8
+CrystalPlaceLimit: 6
