@@ -157,7 +157,7 @@ public final class BlockPhaseProtection implements Listener {
                         shape = shape.clone().shift(x, y, z);
                         if (!body.overlaps(shape)) continue;
                         if (direction != null) {
-                            var hit = shape.expand(0.125).rayTrace(origin, direction, 2.0);
+                            var hit = shape.expand(direction.getY() > 0 ? 0 : 0.125).rayTrace(origin, direction, 2.0);
                             if (hit == null) continue;
                             double distance = hit.getHitPosition().distanceSquared(origin);
                             if (distance > closest || distance == closest && result == 2) continue;
