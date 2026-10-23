@@ -111,7 +111,8 @@ public class PacketServerTeleport extends PacketListenerAbstract {
             }
 
             // 1.21.2+ client ignore teleports if player is inside vehicle, ABSOLUTE CINEMA MOJANG
-            if (player.getClientVersion().isNewerThanOrEquals(ClientVersion.V_1_21_2) && player.compensatedEntities.serverPlayerVehicle != null) {
+            if (player.getClientVersion().isNewerThanOrEquals(ClientVersion.V_1_21_2) && player.compensatedEntities.serverPlayerVehicle != null
+                    && player.getSetbackTeleportUtil().lastKnownGoodPosition != null) {
                 pos = player.getSetbackTeleportUtil().lastKnownGoodPosition.getPos();
             }
 
