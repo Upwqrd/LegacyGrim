@@ -145,8 +145,7 @@ public class PacketPlayerRespawn extends PacketListenerAbstract {
             // Force the player to accept a teleport before respawning
             // (We won't process movements until they accept a teleport, we won't let movements though either)
             // Also invalidate previous positions
-            player.getSetbackTeleportUtil().hasAcceptedSpawnTeleport = false;
-            player.getSetbackTeleportUtil().lastKnownGoodPosition = null;
+            player.getSetbackTeleportUtil().onRespawn();
 
             // clear server entity positions when the world changes
             if (isWorldChange(player, respawn)) {

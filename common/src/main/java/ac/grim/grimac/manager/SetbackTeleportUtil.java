@@ -74,6 +74,13 @@ public class SetbackTeleportUtil extends GrimProcessor implements PostPrediction
         super(player);
     }
 
+    public void onRespawn() {
+        pendingTeleports.clear();
+        requiredSetBack = null;
+        lastKnownGoodPosition = null;
+        hasAcceptedSpawnTeleport = false;
+    }
+
     @Override
     public void onPredictionComplete(final PredictionComplete predictionComplete) {
         // Grab friction now when we know player on ground and other variables
