@@ -37,7 +37,7 @@ public final class CrystalSwapGuard implements Listener {
                 || (event.getHand() == EquipmentSlot.HAND && elapsed >= 0 && elapsed < 1))
             event.setCancelled(true);
         if (event.isCancelled()) return;
-        int limit = GrimAPI.INSTANCE.getConfigManager().getConfig().getIntElse("CrystalPlaceLimit", 8);
+        int limit = GrimAPI.INSTANCE.getConfigManager().getConfig().getIntElse("CrystalPlaceLimit", 6);
         limitPlacement(event, limit, System.nanoTime());
     }
 
