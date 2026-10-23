@@ -1,6 +1,7 @@
 package ac.grim.grimac.platform.bukkit.events;
 
 import ac.grim.grimac.GrimAPI;
+import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.EnderCrystal;
@@ -26,6 +27,13 @@ public final class CrystalSwapGuard implements Listener {
     public void onSlotChange(PlayerItemHeldEvent event) {
         if (event.getPreviousSlot() != event.getNewSlot())
             slotChanges.put(event.getPlayer().getUniqueId(), Bukkit.getCurrentTick());
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onAttack(PrePlayerAttackEntityEvent event) {
+        Integer changed = slotChanges.get(event.getPlayer().getUniqueId());
+        if (event.willAttack() && changed != null && changed == Bukkit.getCurrentTick())
+            event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
