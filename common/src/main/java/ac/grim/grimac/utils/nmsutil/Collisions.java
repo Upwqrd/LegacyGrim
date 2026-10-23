@@ -84,13 +84,16 @@ public final class Collisions {
         double vanillaHeight = player.getMaxUpStep();
         Vector3dm vanilla = collide(player, desiredX, desiredY, desiredZ, clientVelY, data, vanillaHeight);
         double height = player.getAllowedStepHeight();
-        if (data == null || data.isZeroPointZeroThree() || player.inVehicle() || !player.lastOnGround || height <= 0) return vanilla;
-        if (player.actualMovement.getY() > vanillaHeight && height > vanillaHeight
-                && player.actualMovement.getY() <= height + COLLISION_EPSILON) {
+        if (data == null || data.isZeroPointZeroThree() || player.inVehicle() || height <= 0) return vanilla;
+        double landingY = Math.min(0, vanilla.getY());
+        double rise = player.actualMovement.getY() - landingY;
+        if (rise > vanillaHeight && height > vanillaHeight && rise <= height + COLLISION_EPSILON
+                && (vanilla.getY() <= 0 && desiredY < vanilla.getY()
+                || player.lastOnGround && !isEmpty(player, player.boundingBox.copy().offset(0, -0.03, 0)))) {
             Vector3dm step = collide(player, desiredX, desiredY, desiredZ, clientVelY, data, height);
             return step.distanceSquared(player.actualMovement) < vanilla.distanceSquared(player.actualMovement) ? step : vanilla;
         }
-        if (desiredY > 0 || player.actualMovement.getY() >= Math.min(desiredY, vanilla.getY()) || player.actualMovement.getY() < -height - COLLISION_EPSILON
+        if (!player.lastOnGround || desiredY > 0 || player.actualMovement.getY() >= Math.min(desiredY, vanilla.getY()) || player.actualMovement.getY() < -height - COLLISION_EPSILON
                 || !player.hasGravity || player.isFlying || player.isGliding || player.isClimbing || player.isSwimming
                 || player.wasTouchingWater || player.wasTouchingLava || data.stuckSpeedMultiplier.getY() < 1
                 || player.packetStateData.tryingToRiptide || player.compensatedEntities.hasPotionEffect(PotionTypes.LEVITATION)
