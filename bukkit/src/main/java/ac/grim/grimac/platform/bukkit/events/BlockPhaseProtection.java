@@ -142,19 +142,28 @@ public final class BlockPhaseProtection implements Listener {
         Vector origin = direction == null ? null : player.getEyeLocation().add(0, -0.1F, 0).toVector();
         World world = location.getWorld();
         int result = 0;
+        double closest = Double.POSITIVE_INFINITY;
         for (int x = (int) Math.floor(body.getMinX()); x <= Math.floor(body.getMaxX()); x++) {
             for (int z = (int) Math.floor(body.getMinZ()); z <= Math.floor(body.getMaxZ()); z++) {
                 if (!readable(new Location(world, x, location.getY(), z))) return 2;
                 for (int y = Math.max(world.getMinHeight(), (int) Math.floor(body.getMinY()) - 1);
                      y <= Math.min(world.getMaxHeight() - 1, Math.floor(body.getMaxY())); y++) {
                     Block block = world.getBlockAt(x, y, z);
-                    if (block.isEmpty() || block.isLiquid()) continue;
-                    for (BoundingBox shape : block.getCollisionShape().getBoundingBoxes()) {
+                    if (block.isEmpty() || block.isLiquid() || direction != null && block.getType().hasGravity()) continue;
+                    var shapes = block.getCollisionShape().getBoundingBoxes();
+                    boolean solid = !block.getType().hasGravity() && shapes.size() == 1
+                            && shapes.iterator().next().equals(new BoundingBox(0, 0, 0, 1, 1, 1));
+                    for (BoundingBox shape : shapes) {
                         shape = shape.clone().shift(x, y, z);
                         if (!body.overlaps(shape)) continue;
-                        if (direction != null && shape.expand(0.125).rayTrace(origin, direction, 2.0) == null) continue;
-                        if (!block.getType().hasGravity()) return 2;
-                        result = 1;
+                        if (direction != null) {
+                            var hit = shape.expand(0.125).rayTrace(origin, direction, 2.0);
+                            if (hit == null) continue;
+                            double distance = hit.getHitPosition().distanceSquared(origin);
+                            if (distance > closest || distance == closest && result == 2) continue;
+                            closest = distance;
+                        } else if (solid) return 2;
+                        result = solid ? 2 : 1;
                     }
                 }
             }
