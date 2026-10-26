@@ -68,7 +68,7 @@ public class PredictionEngine {
         }
 
         EntitySpeedAllowance.addCandidates(player, possibleVelocities);
-        player.strafeAllowance.addCandidates(player, possibleVelocities, this instanceof PredictionEngineNormal || this instanceof PredictionEngineLava);
+        player.strafeAllowance.addCandidates(player, possibleVelocities, this instanceof PredictionEngineNormal || this instanceof PredictionEngineLava || this instanceof PredictionEngineWater);
 
         // Finally, this was not 0.03 or small movements, so we can attempt to predict it.
         Vector3dm beforeCollisionMovement = doPredictions(player, possibleVelocities, speed);

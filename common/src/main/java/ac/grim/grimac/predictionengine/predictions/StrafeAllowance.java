@@ -22,8 +22,8 @@ public final class StrafeAllowance {
 
     public void addCandidates(GrimPlayer player, List<VectorData> candidates, boolean normalMovement) {
         enabled = normalMovement && !player.inVehicle() && !player.isFlying && !player.isGliding
-                && !player.wasFlying && !player.wasGliding && !player.isClimbing && !player.isSwimming
-                && !player.wasTouchingWater && !player.isSneaking
+                && !player.wasFlying && !player.wasGliding && !player.isClimbing
+                && (!player.isSwimming || player.wasTouchingWater) && !player.isSneaking
                 && player.hasGravity
                 && !player.uncertaintyHandler.influencedByBouncyBlock()
                 && !player.packetStateData.tryingToRiptide
@@ -40,7 +40,7 @@ public final class StrafeAllowance {
         if (slowness.isPresent()) base *= Math.max(0, 1 - 0.15 * (slowness.getAsInt() + 1));
         onIce = player.lastOnGround && BlockProperties.getFriction(player, player.mainSupportingBlockData,
                 new Vector3d(player.lastX, player.lastY, player.lastZ)) >= 0.98F;
-        hopping = player.lastOnGround && !player.onGround && player.actualMovement.getY() > 0;
+        hopping = !player.wasTouchingWater && player.lastOnGround && !player.onGround && player.actualMovement.getY() > 0;
         if (hopping) iceSpeed = 0;
         else if (iceSpeed > 0) iceSpeed = previousHop ? airSpeed(base, iceSpeed, true) : iceSpeed * (158.0 / 159.0);
         if (hopping && (Math.abs(JumpPower.getJumpPower(player) - 0.42F) > 1e-6
