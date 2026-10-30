@@ -42,7 +42,8 @@ public final class CrystalSwapGuard implements Listener {
         Integer changed = slotChanges.get(event.getPlayer().getUniqueId());
         int elapsed = changed == null ? 1 : Bukkit.getCurrentTick() - changed;
         if (event.getPlayer().getInventory().getItem(event.getHand()).getType() != Material.END_CRYSTAL
-                || (event.getHand() == EquipmentSlot.HAND && elapsed >= 0 && elapsed < 1))
+                || (event.getHand() == EquipmentSlot.HAND && elapsed >= 0 && elapsed < 1
+                && !GrimAPI.INSTANCE.getConfigManager().getConfig().getBooleanElse("AllowCrystalSilentSwap", false)))
             event.setCancelled(true);
         if (event.isCancelled()) return;
         int limit = GrimAPI.INSTANCE.getConfigManager().getConfig().getIntElse("CrystalPlaceLimit", 6);
