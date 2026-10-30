@@ -56,7 +56,8 @@ public final class CrystalSwapGuard implements Listener {
         placements.compute(event.getPlayer().getUniqueId(), (id, last) -> {
             boolean active = last != null && !last.event().isCancelled();
             if (active && now - last.time() < 0) { event.setCancelled(true); return last; }
-            long next = active && now - last.time() <= Math.min(interval / 2, 50_000_000L) ? last.time() : now;
+            // Preserve one interval of timing credit at the configured rate; idle time starts a fresh interval.
+            long next = active && now - last.time() < interval ? last.time() : now;
             return new Placement(next + interval, event);
         });
     }
