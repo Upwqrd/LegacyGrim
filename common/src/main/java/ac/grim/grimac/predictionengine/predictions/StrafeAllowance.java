@@ -12,13 +12,12 @@ import com.github.retrooper.packetevents.util.Vector3d;
 import java.util.List;
 
 public final class StrafeAllowance {
-    private boolean previousHop, enabled, hopping, onIce, landed, grounded, creditEnabled;
-    private double previousSpeed, previousJumpSpeed, limit, iceSpeed;
-    private double speedCredit, profileLimit, burstCeiling, carryCeiling, creditCeiling;
+    private boolean previousHop, enabled, hopping, onIce, landed;
+    private double previousSpeed, limit, iceSpeed;
 
     public void reset() {
         previousHop = enabled = landed = false;
-        previousSpeed = previousJumpSpeed = iceSpeed = speedCredit = 0;
+        previousSpeed = iceSpeed = 0;
     }
 
     public void addCandidates(GrimPlayer player, List<VectorData> candidates, boolean normalMovement) {
@@ -41,11 +40,6 @@ public final class StrafeAllowance {
         if (slowness.isPresent()) base *= Math.max(0, 1 - 0.15 * (slowness.getAsInt() + 1));
         onIce = player.lastOnGround && BlockProperties.getFriction(player, player.mainSupportingBlockData,
                 new Vector3d(player.lastX, player.lastY, player.lastZ)) >= 0.98F;
-        burstCeiling = airSpeed(base, groundSpeed(base, true), true);
-        carryCeiling = base * (0.615615 / 0.2873);
-        creditCeiling = Math.max(0, burstCeiling - base);
-        creditEnabled = !onIce && !player.wasTouchingWater && !player.wasTouchingLava;
-        speedCredit = creditEnabled ? Math.min(speedCredit, creditCeiling) : 0;
         hopping = !player.wasTouchingWater && player.lastOnGround && !player.onGround && player.actualMovement.getY() > 0;
         if (hopping) iceSpeed = 0;
         else if (iceSpeed > 0) iceSpeed = previousHop ? airSpeed(base, iceSpeed, true) : iceSpeed * (158.0 / 159.0);
@@ -56,12 +50,7 @@ public final class StrafeAllowance {
         }
         limit = Math.max(iceSpeed, player.lastOnGround ? groundSpeed(base, hopping) : airSpeed(base, previousSpeed, previousHop));
         if (player.lastOnGround)
-            limit = Math.max(limit, hopping ? Math.min(previousJumpSpeed * 1.535, base * (0.615615 / 0.2873)) : airSpeed(base, previousSpeed, previousHop));
-        profileLimit = limit;
-        grounded = creditEnabled && player.onGround && !Collisions.isEmpty(player, player.boundingBox.copy().offset(
-                player.actualMovement.getX(), player.actualMovement.getY() - 0.03, player.actualMovement.getZ()));
-        // Spend only previously unused distance, within the existing first-air speed ceiling.
-        if (grounded) limit = Math.max(limit, Math.min(burstCeiling, limit + speedCredit));
+            limit = Math.max(limit, hopping ? Math.min(previousSpeed * 1.535, base * (0.615615 / 0.2873)) : airSpeed(base, previousSpeed, previousHop));
         int count = candidates.size();
         for (int i = 0; i < count; i++) {
             VectorData vanilla = candidates.get(i);
@@ -87,9 +76,7 @@ public final class StrafeAllowance {
     }
 
     public Vector3dm movement(VectorData candidate, Vector3dm physics, Vector3dm requested) {
-        double candidateLimit = candidate.isKnockback() || candidate.isExplosion()
-                || candidate.stuckSpeedMultiplier.getX() < 1 || candidate.stuckSpeedMultiplier.getZ() < 1 ? profileLimit : limit;
-        double cap = candidateLimit * Math.max(0, Math.min(1,
+        double cap = limit * Math.max(0, Math.min(1,
                 Math.min(candidate.stuckSpeedMultiplier.getX(), candidate.stuckSpeedMultiplier.getZ())));
         if (!candidate.isKnockback() && !candidate.isExplosion())
             cap = Math.max(cap, Math.hypot(physics.getX(), physics.getZ()));
@@ -102,14 +89,7 @@ public final class StrafeAllowance {
                 && player.predictedVelocity.lastVector.vector.getY() < 0;
         double predictedSpeed = Math.hypot(player.predictedVelocity.vector.getX(), player.predictedVelocity.vector.getZ());
         iceSpeed = Math.min(onIce ? limit : iceSpeed, predictedSpeed);
-        previousSpeed = Math.min(onIce ? limit : profileLimit, predictedSpeed);
-        boolean creditSafe = creditEnabled && !player.predictedVelocity.isKnockback() && !player.predictedVelocity.isExplosion()
-                && player.predictedVelocity.stuckSpeedMultiplier.getX() >= 1 && player.predictedVelocity.stuckSpeedMultiplier.getZ() >= 1;
-        if (grounded && player.onGround && creditSafe && predictedSpeed > limit && predictedSpeed <= carryCeiling) previousSpeed = predictedSpeed;
-        previousJumpSpeed = grounded && player.onGround && creditSafe && predictedSpeed <= carryCeiling ? predictedSpeed : previousSpeed;
-        double spent = predictedSpeed <= limit + 1e-7 ? Math.max(0, predictedSpeed - profileLimit) : 0;
-        speedCredit = creditSafe && predictedSpeed > player.getMovementThreshold()
-                ? Math.max(0, Math.min(creditCeiling, speedCredit + Math.max(0, profileLimit - predictedSpeed) - spent)) : 0;
+        previousSpeed = Math.min(limit, predictedSpeed);
         previousHop = hopping;
     }
 
