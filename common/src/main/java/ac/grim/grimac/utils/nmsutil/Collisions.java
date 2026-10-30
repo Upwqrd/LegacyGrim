@@ -85,11 +85,14 @@ public final class Collisions {
         Vector3dm vanilla = collide(player, desiredX, desiredY, desiredZ, clientVelY, data, vanillaHeight);
         double height = player.getAllowedStepHeight();
         if (data == null || data.isZeroPointZeroThree() || player.inVehicle() || height <= 0) return vanilla;
-        double landingY = Math.min(0, vanilla.getY());
+        // The preceding downward collision can leave the box past the floor's edge.
+        boolean landed = player.lastOnGround && player.verticalCollision && player.predictedVelocity != null
+                && player.predictedVelocity.lastVector != null && player.predictedVelocity.lastVector.vector.getY() < 0;
+        double landingY = landed ? 0 : Math.min(0, vanilla.getY());
         double rise = player.actualMovement.getY() - landingY;
         if (rise > vanillaHeight && height > vanillaHeight && rise <= height + COLLISION_EPSILON
                 && (vanilla.getY() <= 0 && desiredY < vanilla.getY()
-                || player.lastOnGround && !isEmpty(player, player.boundingBox.copy().offset(0, -0.03, 0)))) {
+                || player.lastOnGround && (landed || !isEmpty(player, player.boundingBox.copy().offset(0, -0.03, 0))))) {
             Vector3dm step = collide(player, desiredX, desiredY, desiredZ, clientVelY, data, height);
             return step.distanceSquared(player.actualMovement) < vanilla.distanceSquared(player.actualMovement) ? step : vanilla;
         }
