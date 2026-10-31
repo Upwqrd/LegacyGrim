@@ -22,7 +22,7 @@ public class VehicleA extends Check implements PreViaPacketReceiveListener {
         if (event.getPacketType() == PacketType.Play.Client.STEER_VEHICLE) {
             final WrapperPlayClientSteerVehicle packet = new WrapperPlayClientSteerVehicle(event);
 
-            if (Math.abs(packet.getForward()) > 0.98f || Math.abs(packet.getSideways()) > 0.98f) {
+            if (!(Math.abs(packet.getForward()) <= 0.98f && Math.abs(packet.getSideways()) <= 0.98f)) {
                 if (flag(V.write(verbose()).f32(packet.getForward()).f32(packet.getSideways())) && shouldModifyPackets()) {
                     event.setCancelled(true);
                     player.onPacketCancel();
