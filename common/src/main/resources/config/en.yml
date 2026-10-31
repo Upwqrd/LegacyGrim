@@ -241,7 +241,6 @@ update-permission-ticks: -1
 config-flavor: V2
 config-version: 12
 
-# Allow crystal placement in the same server tick as a hotbar slot change.
 AllowCrystalSilentSwap: false
 
 step-height: 1.0

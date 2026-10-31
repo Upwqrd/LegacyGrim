@@ -85,7 +85,6 @@ public final class Collisions {
         Vector3dm vanilla = collide(player, desiredX, desiredY, desiredZ, clientVelY, data, vanillaHeight);
         double height = player.getAllowedStepHeight();
         if (data == null || data.isZeroPointZeroThree() || player.inVehicle() || height <= 0) return vanilla;
-        // The preceding downward collision can leave the box past the floor's edge.
         boolean landed = player.lastOnGround && player.verticalCollision && player.predictedVelocity != null
                 && player.predictedVelocity.lastVector != null && player.predictedVelocity.lastVector.vector.getY() < 0;
         double landingY = landed ? 0 : Math.min(0, vanilla.getY());
