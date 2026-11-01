@@ -53,6 +53,9 @@ public class WrongBreak extends Check implements BlockBreakListener {
     @Override
     public void onBlockBreak(BlockBreak blockBreak) {
         if (blockBreak.action == DiggingAction.START_DIGGING) {
+            if (blockBreak.isCancelled() || blockBreak.block.getType().isAir()
+                    || blockBreak.position.y < player.compensatedWorld.getMinHeight()
+                    || blockBreak.position.y >= player.compensatedWorld.getMaxHeight()) return;
             final Vector3i pos = blockBreak.position;
 
             // getBlockDamage might not return the correct value if the player

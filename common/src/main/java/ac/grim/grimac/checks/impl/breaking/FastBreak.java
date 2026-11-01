@@ -112,6 +112,9 @@ public class FastBreak extends Check implements BlockBreakListener, PreViaPacket
     public void onBlockBreak(BlockBreak blockBreak) {
         if (finishedBreak && isRebreak(blockBreak) && allowsRebreak(rebreakType(blockBreak))) return;
         if (blockBreak.action == DiggingAction.START_DIGGING) {
+            if (blockBreak.isCancelled() || blockBreak.block.getType().isAir()
+                    || blockBreak.position.y < player.compensatedWorld.getMinHeight()
+                    || blockBreak.position.y >= player.compensatedWorld.getMaxHeight()) return;
             if (!ViaVersionUtil.isAvailable) {
                 // Exempt all blocks that do not exist in the player version
                 final WrappedBlockState defaultState = WrappedBlockState.getDefaultState(player.getClientVersion(), blockBreak.block.getType());
