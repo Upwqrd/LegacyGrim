@@ -241,6 +241,7 @@ config-flavor: V2
 config-version: 12
 
 AllowCrystalSilentSwap: false
+FoodMultitask: false
 # Successful block placement actions per player per server tick; 0 disables this limiter.
 BlockPlaceLimit: 2
 
