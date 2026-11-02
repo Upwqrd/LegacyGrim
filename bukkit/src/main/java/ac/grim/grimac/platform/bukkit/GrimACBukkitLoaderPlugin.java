@@ -102,6 +102,7 @@ public final class GrimACBukkitLoaderPlugin extends JavaPlugin implements Platfo
     @Override
     public void onEnable() {
         GrimAPI.INSTANCE.start();
+        ac.grim.grimac.platform.bukkit.events.FoodMultitask.start(this);
         BlockPhaseProtection.start();
         Bukkit.getPluginManager().registerEvents(new BlockPlaceLimiter(), this);
         Bukkit.getPluginManager().registerEvents(new CrystalSwapGuard(), this);

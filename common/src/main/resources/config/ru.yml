@@ -241,6 +241,7 @@ config-flavor: V2
 config-version: 12
 
 AllowCrystalSilentSwap: false
+FoodMultitask: false
 # Установок блоков на игрока за серверный тик; 0 отключает этот лимит.
 BlockPlaceLimit: 2
 
