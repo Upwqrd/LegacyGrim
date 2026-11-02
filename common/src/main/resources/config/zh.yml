@@ -262,3 +262,4 @@ config-flavor: V2
 config-version: 12
 
 AllowCrystalSilentSwap: false
+BlockPlaceLimit: 2

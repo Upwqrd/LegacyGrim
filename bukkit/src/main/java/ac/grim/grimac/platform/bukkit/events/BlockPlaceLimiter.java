@@ -1,5 +1,6 @@
 package ac.grim.grimac.platform.bukkit.events;
 
+import ac.grim.grimac.GrimAPI;
 import com.github.retrooper.packetevents.protocol.item.type.ItemTypes;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
@@ -34,6 +35,8 @@ public final class BlockPlaceLimiter implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlace(BlockPlaceEvent event) {
         if (ItemTypes.getByName(event.getItemInHand().getType().getKey().toString()).getPlacedType() == null) return;
+        int limit = GrimAPI.INSTANCE.getConfigManager().getConfig().getIntElse("BlockPlaceLimit", 2);
+        if (limit <= 0) return;
         Budget budget = budgets.computeIfAbsent(event.getPlayer().getUniqueId(), id -> new Budget());
         synchronized (budget) {
             int tick = Bukkit.getCurrentTick();
@@ -42,7 +45,7 @@ public final class BlockPlaceLimiter implements Listener {
                 budget.attempts.clear();
             }
             budget.attempts.removeIf(a -> a.finished && (a.event.isCancelled() || !a.event.canBuild()));
-            if (budget.attempts.size() >= 2) {
+            if (budget.attempts.size() >= limit) {
                 event.setCancelled(true);
             } else {
                 budget.attempts.add(new Attempt(event));
