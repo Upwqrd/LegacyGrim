@@ -23,6 +23,8 @@
 
 Настройки: `step-height: 1.0` (0 отключает дополнительный шаг, максимум 2), `PearlPhasePrevention: true`, `PushOutOfBlocks: true`, `CrystalPlaceLimit: 6` (0 отключает лимит). Кристаллы: интервал 166,7 мс с поправкой на серверный тик, без накопления пачки; отмена возвращает интервал. Криты: 20 пар/с, запас 4 пары. Пороги NoSlow/Knockback/Explosion фиксированы кодом; SprintC исключён.
 
+Multitask вынесен из основной ветки. [Три варианта реализации и установки](README.md#multitask).
+
 ```powershell
 git clone --branch folia-1.21.11-audited https://github.com/Upwqrd/LegacyGrim.git
 cd LegacyGrim
