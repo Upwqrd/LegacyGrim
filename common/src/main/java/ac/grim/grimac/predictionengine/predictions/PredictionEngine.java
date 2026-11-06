@@ -69,9 +69,11 @@ public class PredictionEngine {
 
         EntitySpeedAllowance.addCandidates(player, possibleVelocities);
         player.strafeAllowance.addCandidates(player, possibleVelocities, this instanceof PredictionEngineNormal || this instanceof PredictionEngineLava || this instanceof PredictionEngineWater);
+        FastWebAllowance.addCandidates(player, possibleVelocities, this instanceof PredictionEngineNormal);
 
         // Finally, this was not 0.03 or small movements, so we can attempt to predict it.
         Vector3dm beforeCollisionMovement = doPredictions(player, possibleVelocities, speed);
+        if (this instanceof PredictionEngineNormal) FastWebAllowance.enforce(player);
 
         // Client velocity - before collision and carried into the next tick
         // Predicted velocity - after collision and not carried into the next tick
@@ -109,7 +111,10 @@ public class PredictionEngine {
                         primaryPushMovement, player.actualMovement, clientVelAfterInput.stuckSpeedMultiplier);
             }
 
-            if (clientVelAfterInput.vectorType == VectorData.VectorType.Strafe) {
+            if (clientVelAfterInput.vectorType == VectorData.VectorType.Strafe
+                    || (clientVelAfterInput.vectorType == VectorData.VectorType.FastWeb
+                    || clientVelAfterInput.vectorType == VectorData.VectorType.FastWebNormal)
+                    && clientVelAfterInput.lastVector.vectorType == VectorData.VectorType.Strafe) {
                 primaryPushMovement = player.strafeAllowance.movement(clientVelAfterInput, primaryPushMovement, player.actualMovement);
             }
 

@@ -1,6 +1,9 @@
 package ac.grim.grimac.platform.bukkit.events;
 
 import ac.grim.grimac.GrimAPI;
+import ac.grim.grimac.utils.collisions.datatypes.SimpleCollisionBox;
+import ac.grim.grimac.utils.math.Vector3dm;
+import ac.grim.grimac.utils.nmsutil.Collisions;
 import ac.grim.grimac.platform.api.Platform;
 import ac.grim.grimac.platform.api.scheduler.TaskHandle;
 import ac.grim.grimac.platform.bukkit.entity.BukkitGrimEntity;
@@ -8,6 +11,7 @@ import ac.grim.grimac.platform.bukkit.GrimACBukkitLoaderPlugin;
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.manager.server.ServerVersion;
 import ac.grim.grimac.platform.bukkit.utils.reflection.PaperUtils;
+import io.papermc.paper.event.player.PlayerFailMoveEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -29,6 +33,8 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -169,5 +175,41 @@ public final class BlockPhaseProtection implements Listener {
             }
         }
         return result;
+    }
+
+    @EventHandler
+    public void onWebFailure(PlayerFailMoveEvent event) {
+        if (event.getFailReason() != PlayerFailMoveEvent.FailReason.MOVED_WRONGLY) return;
+        var grim = GrimAPI.INSTANCE.getPlayerDataManager().getPlayer(event.getPlayer().getUniqueId());
+        if (grim == null || grim.disableGrim || grim.noSetbackPermission
+                || grim.getSetbackTeleportUtil().shouldBlockMovement()) return;
+        var from = event.getFrom();
+        var to = event.getTo();
+        if (from.getWorld() == null || !from.getWorld().equals(to.getWorld())) return;
+        var movement = new Vector3dm(to.getX() - from.getX(), to.getY() - from.getY(), to.getZ() - from.getZ());
+        if (!Double.isFinite(movement.lengthSquared()) || movement.lengthSquared() > 1) return;
+        double half = event.getPlayer().getWidth() / 2;
+        var body = new SimpleCollisionBox(from.getX() - half, from.getY(), from.getZ() - half,
+                from.getX() + half, from.getY() + event.getPlayer().getHeight(), from.getZ() + half);
+        var swept = body.copy().expandToCoordinate(movement.getX(), movement.getY(), movement.getZ());
+        var boxes = new ArrayList<SimpleCollisionBox>();
+        boolean web = false;
+        for (int x = (int) Math.floor(swept.minX); x <= Math.floor(swept.maxX); x++)
+            for (int y = (int) Math.floor(swept.minY) - 1; y <= Math.floor(swept.maxY); y++)
+                for (int z = (int) Math.floor(swept.minZ); z <= Math.floor(swept.maxZ); z++) {
+                    if (!from.getWorld().isChunkLoaded(x >> 4, z >> 4)) return;
+                    var block = from.getWorld().getBlockAt(x, y, z);
+                    web |= block.getType() == Material.COBWEB && new SimpleCollisionBox(x, y, z).isIntersected(body);
+                    for (var box : block.getCollisionShape().getBoundingBoxes())
+                        boxes.add(new SimpleCollisionBox(box.getMinX() + x, box.getMinY() + y, box.getMinZ() + z,
+                                box.getMaxX() + x, box.getMaxY() + y, box.getMaxZ() + z));
+                }
+        var order = Math.abs(movement.getX()) < Math.abs(movement.getZ())
+                ? List.of(Collisions.Axis.Y, Collisions.Axis.Z, Collisions.Axis.X)
+                : List.of(Collisions.Axis.Y, Collisions.Axis.X, Collisions.Axis.Z);
+        if (web && Collisions.collideBoundingBoxLegacy(movement, body, boxes, order).distanceSquared(movement) < 1e-12) {
+            event.setAllowed(true);
+            event.setLogWarning(false);
+        }
     }
 }

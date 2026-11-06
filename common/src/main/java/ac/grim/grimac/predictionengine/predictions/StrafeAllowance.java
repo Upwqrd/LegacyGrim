@@ -12,6 +12,7 @@ import com.github.retrooper.packetevents.util.Vector3d;
 import java.util.List;
 
 public final class StrafeAllowance {
+    private double webLimit;
     private boolean previousHop, enabled, hopping, onIce, landed, grounded, creditEnabled;
     private double previousSpeed, previousJumpSpeed, limit, iceSpeed;
     private double speedCredit, profileLimit, burstCeiling, carryCeiling, creditCeiling;
@@ -39,6 +40,7 @@ public final class StrafeAllowance {
         var slowness = player.compensatedEntities.getPotionLevelForPlayer(PotionTypes.SLOWNESS);
         if (speed.isPresent()) base *= 1 + 0.2 * (speed.getAsInt() + 1);
         if (slowness.isPresent()) base *= Math.max(0, 1 - 0.15 * (slowness.getAsInt() + 1));
+        webLimit = 2 * base;
         onIce = player.lastOnGround && BlockProperties.getFriction(player, player.mainSupportingBlockData,
                 new Vector3d(player.lastX, player.lastY, player.lastZ)) >= 0.98F;
         burstCeiling = airSpeed(base, groundSpeed(base, true), true);
@@ -92,6 +94,8 @@ public final class StrafeAllowance {
                 Math.min(candidate.stuckSpeedMultiplier.getX(), candidate.stuckSpeedMultiplier.getZ())));
         if (!candidate.isKnockback() && !candidate.isExplosion())
             cap = Math.max(cap, Math.hypot(physics.getX(), physics.getZ()));
+        if (candidate.vectorType == VectorData.VectorType.FastWeb)
+            cap = Math.max(webLimit, Math.hypot(physics.getX(), physics.getZ()));
         return boundedMovement(physics, requested, cap);
     }
 
