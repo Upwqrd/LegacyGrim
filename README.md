@@ -1,5 +1,24 @@
 > This branch is a Folia policy fork. See [the administrator README](README-FORK.md) for its features, configuration and limitations.
 
+## Multitask
+
+В основных ветках LegacyGrim встроенной реализации Multitask нет. Доступны три варианта:
+
+- **Рефлексия в плагине:** ветки [folia-1.21.11-multitask](https://github.com/Upwqrd/LegacyGrim/tree/folia-1.21.11-multitask) и [folia-26.3-multitask](https://github.com/Upwqrd/LegacyGrim/tree/folia-26.3-multitask). Включите `FoodMultitask: true` в конфиге плагина и перезапустите сервер.
+- **Форк ядра:** [Paper-multitask](https://github.com/Upwqrd/Paper-multitask), [Folia-multitask](https://github.com/Upwqrd/Folia-multitask) или [Canvas-multitask](https://github.com/Upwqrd/Canvas-multitask). Выберите ветку `<версия>-multitask` под свой сервер.
+- **Java-агент:** [MultitaskAgent](https://github.com/Upwqrd/MultitaskAgent). Добавьте `-javaagent:multitask-agent.jar` перед `-jar` в команду запуска и перезапустите сервер.
+
+Проверенная конфигурация LegacyGrim для форка ядра или Java-агента:
+
+```yaml
+reset-item-usage-on-item-update: false
+reset-item-usage-on-attack: false
+reset-item-usage-on-slot-change: false
+reset-item-usage-on-item-use: false
+```
+
+Иначе LegacyGrim может сам прерывать использование предмета, даже когда ядро или агент сохраняют его.
+
 <div align="center">
  <h1>GrimAC</h1>
 

@@ -262,5 +262,4 @@ config-flavor: V2
 config-version: 12
 
 AllowCrystalSilentSwap: false
-FoodMultitask: false
 BlockPlaceLimit: 2
