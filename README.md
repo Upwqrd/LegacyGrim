@@ -1,5 +1,11 @@
 > This branch is a Folia policy fork. See [the administrator README](README-FORK.md) for its features, configuration and limitations.
 
+## Новые возможности
+
+- **ElytraFly Control:** до 100 км/ч по горизонтали, 10 км/ч по вертикали и подъём до 10 блоков от начала полёта по умолчанию. Настройки — `elytra-control`.
+- **Scaffold Tower Plain:** вертикальный подъём с опорой и учётом задержки подтверждения одного блока. Для Fast ×2 послаблений Timer нет.
+- **Защита FakeFly:** Control требует пригодных для полёта элитр или планера; быстрый свап на обычный нагрудник не сохраняет допуск.
+
 <div align="center">
  <h1>GrimAC</h1>
 
