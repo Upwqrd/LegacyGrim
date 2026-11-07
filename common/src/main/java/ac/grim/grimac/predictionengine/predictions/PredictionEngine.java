@@ -70,6 +70,7 @@ public class PredictionEngine {
         EntitySpeedAllowance.addCandidates(player, possibleVelocities);
         player.strafeAllowance.addCandidates(player, possibleVelocities, this instanceof PredictionEngineNormal || this instanceof PredictionEngineLava || this instanceof PredictionEngineWater);
         FastWebAllowance.addCandidates(player, possibleVelocities, this instanceof PredictionEngineNormal);
+        if (this instanceof PredictionEngineNormal) player.scaffoldTowerAllowance.addCandidates(player, possibleVelocities);
         if (this instanceof PredictionEngineElytra) player.getElytraControl().addCandidates(player, possibleVelocities);
 
         // Finally, this was not 0.03 or small movements, so we can attempt to predict it.
