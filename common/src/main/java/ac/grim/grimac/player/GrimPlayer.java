@@ -22,6 +22,7 @@ import ac.grim.grimac.predictionengine.EntityFluidInteraction;
 import ac.grim.grimac.predictionengine.MovementCheckRunner;
 import ac.grim.grimac.predictionengine.PointThreeEstimator;
 import ac.grim.grimac.predictionengine.UncertaintyHandler;
+import ac.grim.grimac.predictionengine.predictions.ElytraControlAllowance;
 import ac.grim.grimac.manager.AttackCooldownHandler;
 import ac.grim.grimac.predictionengine.blockeffects.CompensatedGeysers;
 import ac.grim.grimac.predictionengine.blockeffects.PotentSulfurGeyser;
@@ -146,6 +147,7 @@ public class GrimPlayer implements GrimUser {
     public @NotNull IndexedVector3d stuckSpeedMultiplier = StuckSpeed.NONE;
     public @NotNull IndexedVector3d lastStuckSpeedMultiplier = StuckSpeed.NONE;
     public final @NotNull UncertaintyHandler uncertaintyHandler;
+    @Getter private final ElytraControlAllowance elytraControl = new ElytraControlAllowance();
     public double gravity;
     public float friction;
     public double speed;
@@ -972,6 +974,7 @@ public class GrimPlayer implements GrimUser {
     public final void reload(ConfigManager config) {
         updatePermissions();
         featureManager.onReload(config);
+        elytraControl.reload(config);
         debugPacketCancel = config.getBooleanElse("debug-packet-cancel", false);
         spamThreshold = config.getIntElse("packet-spam-threshold", 100);
         maxTransactionTime = GrimMath.clamp(config.getIntElse("max-transaction-time", 60), 1, 180);

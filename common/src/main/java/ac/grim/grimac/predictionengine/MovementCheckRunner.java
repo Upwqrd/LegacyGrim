@@ -126,6 +126,7 @@ public class MovementCheckRunner extends GrimProcessor {
         }
 
         player.uncertaintyHandler.lastTeleportTicks.reset();
+        player.getElytraControl().reset();
 
         // Teleports OVERRIDE explosions and knockback
         player.checkManager.getExplosionHandler().forceExempt();
@@ -483,6 +484,7 @@ public class MovementCheckRunner extends GrimProcessor {
         }
 
         player.startTickClientVel = player.clientVelocity;
+        player.getElytraControl().update(player.isGliding && !player.isFlying && !player.inVehicle(), player.lastY);
 
         boolean wasChecked = false;
 
