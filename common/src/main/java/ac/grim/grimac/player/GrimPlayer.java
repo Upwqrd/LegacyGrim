@@ -22,6 +22,7 @@ import ac.grim.grimac.predictionengine.EntityFluidInteraction;
 import ac.grim.grimac.predictionengine.MovementCheckRunner;
 import ac.grim.grimac.predictionengine.PointThreeEstimator;
 import ac.grim.grimac.predictionengine.UncertaintyHandler;
+import ac.grim.grimac.predictionengine.predictions.ElytraControlAllowance;
 import ac.grim.grimac.predictionengine.predictions.StrafeAllowance;
 import ac.grim.grimac.manager.AttackCooldownHandler;
 import ac.grim.grimac.predictionengine.blockeffects.CompensatedGeysers;
@@ -147,6 +148,7 @@ public class GrimPlayer implements GrimUser {
     public @NotNull IndexedVector3d stuckSpeedMultiplier = StuckSpeed.NONE;
     public @NotNull IndexedVector3d lastStuckSpeedMultiplier = StuckSpeed.NONE;
     public final @NotNull UncertaintyHandler uncertaintyHandler;
+    @Getter private final ElytraControlAllowance elytraControl = new ElytraControlAllowance();
     public final StrafeAllowance strafeAllowance = new StrafeAllowance();
     public double gravity;
     public float friction;
@@ -981,6 +983,7 @@ public class GrimPlayer implements GrimUser {
     public final void reload(ConfigManager config) {
         updatePermissions();
         featureManager.onReload(config);
+        elytraControl.reload(config);
         double stepHeight = config.getDoubleElse("step-height", 1.0);
         allowedStepHeight = (float) (Double.isFinite(stepHeight) ? GrimMath.clamp(stepHeight, 0, 2) : 1.0);
         debugPacketCancel = config.getBooleanElse("debug-packet-cancel", false);
