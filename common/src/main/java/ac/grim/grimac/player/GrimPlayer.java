@@ -24,6 +24,7 @@ import ac.grim.grimac.predictionengine.PointThreeEstimator;
 import ac.grim.grimac.predictionengine.UncertaintyHandler;
 import ac.grim.grimac.predictionengine.predictions.ElytraControlAllowance;
 import ac.grim.grimac.predictionengine.predictions.StrafeAllowance;
+import ac.grim.grimac.predictionengine.predictions.ScaffoldTowerAllowance;
 import ac.grim.grimac.manager.AttackCooldownHandler;
 import ac.grim.grimac.predictionengine.blockeffects.CompensatedGeysers;
 import ac.grim.grimac.predictionengine.blockeffects.PotentSulfurGeyser;
@@ -245,6 +246,7 @@ public class GrimPlayer implements GrimUser {
     public @MonotonicNonNull DimensionType dimensionType;
     public @Nullable String worldName;
     public @MonotonicNonNull Vector3d bedPosition;
+    public final ScaffoldTowerAllowance scaffoldTowerAllowance = new ScaffoldTowerAllowance();
     public long lastBlockPlaceUseItem;
     public long lastBlockBreak;
     public final @NotNull AtomicInteger cancelledPackets = new AtomicInteger(0);
