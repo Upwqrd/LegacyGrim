@@ -33,7 +33,7 @@ public final class ElytraControlAllowance {
     }
 
     public void addCandidates(GrimPlayer p, List<VectorData> candidates) {
-        if (!p.isGliding || p.inVehicle() || p.isFlying || p.wasTouchingWater || p.wasTouchingLava) return;
+        if (!p.isGliding || !p.canGlide() || p.inVehicle() || p.isFlying || p.wasTouchingWater || p.wasTouchingLava) return;
         Vector3dm movement = bound(p.actualMovement, p.lastY);
         if (movement == null) return;
         for (var source : List.copyOf(candidates)) {
