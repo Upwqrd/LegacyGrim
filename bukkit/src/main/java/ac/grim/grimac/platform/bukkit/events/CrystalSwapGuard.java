@@ -5,29 +5,77 @@ import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.EnderCrystal;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPlaceEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.LongSupplier;
 
 public final class CrystalSwapGuard implements Listener {
     private final Map<UUID, Integer> slotChanges = new ConcurrentHashMap<>();
-    private final Map<UUID, Placement> placements = new ConcurrentHashMap<>();
+    private final Map<UUID, Budget> budgets = new ConcurrentHashMap<>();
+    private final LongSupplier clock;
+    private static final long SECOND = 1_000_000_000L;
+    public CrystalSwapGuard() { this(System::nanoTime); }
+    CrystalSwapGuard(LongSupplier clock) { this.clock = clock; }
 
-    private record Placement(long time, EntityPlaceEvent event) {}
+    private static final class Budget {
+        long heldSince;
+        Attempt last;
+    }
+    private static final class Attempt {
+        final EntityPlaceEvent event;
+        final long time;
+        final double delay;
+        final int rate;
+        Attempt previous;
+        boolean finished;
+        Attempt(EntityPlaceEvent event, long time, double delay, int rate, Attempt previous) {
+            this.event = event; this.time = time; this.delay = delay; this.rate = rate; this.previous = previous;
+        }
+    }
+    private Budget budget(Player player) {
+        return budgets.computeIfAbsent(player.getUniqueId(), id -> {
+            Budget value = new Budget(); value.heldSince = clock.getAsLong() - SECOND; return value;
+        });
+    }
+    private void changed(Player player) {
+        Budget value = budget(player);
+        synchronized (value) { value.heldSince = clock.getAsLong(); }
+    }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSlotChange(PlayerItemHeldEvent event) {
-        if (event.getPreviousSlot() != event.getNewSlot())
+        if (event.getPreviousSlot() != event.getNewSlot()) {
             slotChanges.put(event.getPlayer().getUniqueId(), Bukkit.getCurrentTick());
+            changed(event.getPlayer());
+        }
     }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onInventory(InventoryClickEvent event) {
+        if (event.getWhoClicked() instanceof Player p && (event.getHotbarButton() == p.getInventory().getHeldItemSlot()
+                || event.getClickedInventory() instanceof PlayerInventory && event.getSlot() == p.getInventory().getHeldItemSlot())) changed(p);
+    }
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onDrag(InventoryDragEvent event) {
+        if (event.getWhoClicked() instanceof Player p && event.getRawSlots().stream().anyMatch(slot ->
+                event.getView().getInventory(slot) instanceof PlayerInventory && event.getView().convertSlot(slot) == p.getInventory().getHeldItemSlot())) changed(p);
+    }
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onHandSwap(PlayerSwapHandItemsEvent event) { changed(event.getPlayer()); }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onAttack(PrePlayerAttackEntityEvent event) {
@@ -46,24 +94,46 @@ public final class CrystalSwapGuard implements Listener {
                 && !GrimAPI.INSTANCE.getConfigManager().getConfig().getBooleanElse("AllowCrystalSilentSwap", false)))
             event.setCancelled(true);
         if (event.isCancelled()) return;
-        int limit = GrimAPI.INSTANCE.getConfigManager().getConfig().getIntElse("CrystalPlaceLimit", 6);
-        limitPlacement(event, limit, System.nanoTime());
+        Budget value = budget(event.getPlayer());
+        var config = GrimAPI.INSTANCE.getConfigManager().getConfig();
+        int normal = config.getIntElse("CrystalPlaceLimit", 6);
+        int swapped = config.getIntElse("CrystalSwapPlaceLimit", 0);
+        synchronized (value) {
+            long now = clock.getAsLong();
+            boolean swap = event.getHand() == EquipmentSlot.HAND && now - value.heldSince < SECOND;
+            limitPlacement(event, !swap || swapped <= 0 ? normal : normal <= 0 ? swapped : Math.min(normal, swapped), now);
+        }
     }
 
-    private void limitPlacement(EntityPlaceEvent event, int limit, long now) {
-        if (limit <= 0) return;
-        long interval = (1_000_000_000L + limit - 1) / limit;
-        placements.compute(event.getPlayer().getUniqueId(), (id, last) -> {
-            boolean active = last != null && !last.event().isCancelled();
-            if (active && now - last.time() < 0) { event.setCancelled(true); return last; }
-            long next = active && now - last.time() < interval ? last.time() : now;
-            return new Placement(next + interval, event);
-        });
+    void limitPlacement(EntityPlaceEvent event, int rate, long now) {
+        if (rate <= 0) return;
+        Budget value = budget(event.getPlayer());
+        synchronized (value) {
+            while (value.last != null && value.last.finished && value.last.event.isCancelled()) value.last = value.last.previous;
+            Attempt last = value.last;
+            if (last != null && last.finished) last.previous = null;
+            double period = SECOND / (double) rate;
+            long elapsed = last == null ? Long.MAX_VALUE : now - last.time;
+            double wait = last == null ? 0 : (last.rate == rate ? last.delay : period) - elapsed;
+            if (wait <= -period) wait = 0;
+            if (wait > 1 || last != null && elapsed + 1.0 < period / 2) event.setCancelled(true);
+            else value.last = new Attempt(event, now, wait + period, rate, last);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onComplete(EntityPlaceEvent event) {
+        if (!(event.getEntity() instanceof EnderCrystal) || event.getPlayer() == null) return;
+        Budget value = budgets.get(event.getPlayer().getUniqueId());
+        if (value != null) synchronized (value) {
+            for (Attempt attempt = value.last; attempt != null; attempt = attempt.previous)
+                if (attempt.event == event) attempt.finished = true;
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
         slotChanges.remove(event.getPlayer().getUniqueId());
-        placements.remove(event.getPlayer().getUniqueId());
+        budgets.remove(event.getPlayer().getUniqueId());
     }
 }
