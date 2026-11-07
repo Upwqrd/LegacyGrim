@@ -121,6 +121,7 @@ public class VectorData {
         InputResult,
         EntitySpeed,
         ElytraControl,
+        ScaffoldTower,
         FluidPush,
         Strafe,
         StuckMultiplier,
