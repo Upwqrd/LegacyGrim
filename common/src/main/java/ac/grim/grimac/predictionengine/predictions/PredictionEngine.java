@@ -68,7 +68,6 @@ public class PredictionEngine {
         }
 
         EntitySpeedAllowance.addCandidates(player, possibleVelocities);
-        if (this instanceof PredictionEngineElytra) player.getElytraControl().addCandidates(player, possibleVelocities);
 
         // Finally, this was not 0.03 or small movements, so we can attempt to predict it.
         Vector3dm beforeCollisionMovement = doPredictions(player, possibleVelocities, speed);
