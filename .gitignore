@@ -5,6 +5,7 @@
 .mtj.tmp/
 *.class
 *.jar
+!/bukkit/libs/FasterCrystals-104d743-api.jar
 *.war
 *.ear
 *.nar
