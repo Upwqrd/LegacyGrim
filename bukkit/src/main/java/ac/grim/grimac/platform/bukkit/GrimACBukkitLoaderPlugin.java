@@ -105,7 +105,9 @@ public final class GrimACBukkitLoaderPlugin extends JavaPlugin implements Platfo
         ac.grim.grimac.platform.bukkit.events.FoodMultitask.start(this);
         BlockPhaseProtection.start();
         Bukkit.getPluginManager().registerEvents(new BlockPlaceLimiter(), this);
-        Bukkit.getPluginManager().registerEvents(new CrystalSwapGuard(), this);
+        CrystalSwapGuard crystals = new CrystalSwapGuard();
+        Bukkit.getPluginManager().registerEvents(crystals, this);
+        if (Bukkit.getPluginManager().isPluginEnabled("FasterCrystals")) Bukkit.getPluginManager().registerEvents(crystals.fasterCrystalsListener(), this);
         GlideSwapGuard glideSwapGuard = new GlideSwapGuard();
         Bukkit.getPluginManager().registerEvents(glideSwapGuard, this);
         for (var player : Bukkit.getOnlinePlayers())

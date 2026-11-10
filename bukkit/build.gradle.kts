@@ -115,6 +115,7 @@ fun liteSharedProviderClassEntries(): Set<String> {
 
 
 dependencies {
+    compileOnly(files("libs/FasterCrystals-104d743-api.jar"))
     compileOnly(libs.paper.api)
     compileOnly(libs.placeholderapi)
     compileOnly(libs.luckperms)
@@ -145,6 +146,7 @@ bukkit {
     }
 
     softDepend = listOf(
+        "FasterCrystals",
         "ProtocolLib",
         "ProtocolSupport",
         "Essentials",
