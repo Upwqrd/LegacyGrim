@@ -47,34 +47,7 @@ public class PacketEntityAction extends PacketListenerAbstract {
                 case START_SNEAKING -> player.isSneaking = true;
                 case STOP_SNEAKING -> player.isSneaking = false;
                 case START_FLYING_WITH_ELYTRA -> {
-                    if (PacketEvents.getAPI().getServerManager().getVersion().isOlderThan(ServerVersion.V_1_9))
-                        return;
-
-                    if (player.onGround || player.lastOnGround) {
-                        player.getSetbackTeleportUtil().executeNonSimulatingForceResync();
-                        player.resyncGlidingState();
-                        event.setCancelled(true);
-                        player.onPacketCancel();
-                        return;
-                    }
-
-                    player.checkManager.get(ElytraA.class).onStartGliding(event);
-
-                    // Starting fall flying is server sided on 1.14 and below
-                    if (player.getClientVersion().isOlderThan(ClientVersion.V_1_15)) return;
-
-                    // This shouldn't be needed with latency compensated inventories
-                    // TODO: Remove this?
-                    if (player.canGlide()) {
-                        player.isGliding = true;
-                        player.pointThreeEstimator.updatePlayerGliding();
-                    } else {
-                        // A client is flying with a ghost elytra, resync
-                        player.getSetbackTeleportUtil().executeNonSimulatingForceResync();
-                        player.resyncGlidingState();
-                        event.setCancelled(true);
-                        player.onPacketCancel();
-                    }
+                    handleStartGliding(player, event);
                 }
                 case START_JUMPING_WITH_HORSE -> {
                     PacketEntity riding = player.compensatedEntities.self.getRiding();
@@ -84,6 +57,47 @@ public class PacketEntityAction extends PacketListenerAbstract {
                     }
                 }
             }
+        }
+    }
+
+    static void handleStartGliding(GrimPlayer player, PacketReceiveEvent event) {
+        player.packetStateData.lastElytraStartWasDuplicate = false;
+        player.packetStateData.lastElytraStartWasContinuation = false;
+        if (PacketEvents.getAPI().getServerManager().getVersion().isOlderThan(ServerVersion.V_1_9))
+            return;
+
+        if (player.isGliding && player.canGlide() && !player.inVehicle() && !player.isFlying
+                && player.getClientVersion().isNewerThanOrEquals(ClientVersion.V_1_15)) {
+            player.packetStateData.lastElytraStartWasDuplicate = true;
+            return;
+        }
+
+        if (player.onGround) {
+            player.getSetbackTeleportUtil().executeNonSimulatingForceResync();
+            player.resyncGlidingState();
+            event.setCancelled(true);
+            player.onPacketCancel();
+            return;
+        }
+
+        player.checkManager.get(ElytraA.class).onStartGliding(event);
+
+        // Starting fall flying is server sided on 1.14 and below
+        if (player.getClientVersion().isOlderThan(ClientVersion.V_1_15)) return;
+
+        // This shouldn't be needed with latency compensated inventories
+        // TODO: Remove this?
+        if (player.canGlide()) {
+            player.packetStateData.lastElytraStartWasContinuation = player.wasGliding
+                    && !player.clientClaimsLastOnGround && !player.inVehicle() && !player.isFlying;
+            player.isGliding = true;
+            player.pointThreeEstimator.updatePlayerGliding();
+        } else {
+            // A client is flying with a ghost elytra, resync
+            player.getSetbackTeleportUtil().executeNonSimulatingForceResync();
+            player.resyncGlidingState();
+            event.setCancelled(true);
+            player.onPacketCancel();
         }
     }
 }
