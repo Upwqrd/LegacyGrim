@@ -117,7 +117,7 @@ public final class StrafeAllowance {
     }
 
     static double groundSpeed(double base, boolean hopping) {
-        return Math.max(base, (1.18F * base - 0.01) * (hopping ? 1.63 : 1));
+        return Math.max(base, hopping ? (1.18F * base - 0.01) * 1.63 : 1.35 * base - 0.01);
     }
 
     static double airSpeed(double base, double previous, boolean afterHop) {
