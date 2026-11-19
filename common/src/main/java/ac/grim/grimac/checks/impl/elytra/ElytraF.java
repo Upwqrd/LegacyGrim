@@ -28,6 +28,9 @@ public class ElytraF extends Check implements PacketReceiveListener, PostPredict
     public void onPacketReceive(PacketReceiveEvent event) {
         if (event.getPacketType() == PacketType.Play.Client.ENTITY_ACTION
                 && new WrapperPlayClientEntityAction(event).getAction() == WrapperPlayClientEntityAction.Action.START_FLYING_WITH_ELYTRA
+                && player.packetStateData.lastElytraStartWasDuplicate) return;
+        if (event.getPacketType() == PacketType.Play.Client.ENTITY_ACTION
+                && new WrapperPlayClientEntityAction(event).getAction() == WrapperPlayClientEntityAction.Action.START_FLYING_WITH_ELYTRA
                 && player.clientClaimsLastOnGround
                 && flag()) {
             setback = true;
