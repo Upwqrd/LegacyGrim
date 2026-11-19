@@ -31,6 +31,7 @@ public class ElytraB extends Check implements PacketReceiveListener, PostPredict
     public void onPacketReceive(PacketReceiveEvent event) {
         if (event.getPacketType() == PacketType.Play.Client.ENTITY_ACTION
                 && new WrapperPlayClientEntityAction(event).getAction() == WrapperPlayClientEntityAction.Action.START_FLYING_WITH_ELYTRA) {
+            if (player.packetStateData.lastElytraStartWasDuplicate || player.packetStateData.lastElytraStartWasContinuation) return;
             if (player.packetStateData.knownInput.jump()) {
                 if (flag(V.write(verbose()).bool(true))) {
                     setback = true;
