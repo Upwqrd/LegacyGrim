@@ -293,7 +293,7 @@ public class Reach extends Check implements PacketReceiveListener {
                 final Vector3d eyePos = new Vector3d(x, y + eye, z);
                 Vector3d endReachPos = eyePos.add(lookVec.getX(), lookVec.getY(), lookVec.getZ());
 
-                Vector3d intercept = reachEntity.getType() == EntityTypes.END_CRYSTAL
+                Vector3d intercept = reachEntity.isLivingEntity || reachEntity.getType() == EntityTypes.END_CRYSTAL
                         ? VectorUtils.cutBoxToVector(x, y + eye, z, targetBox).toVector3d()
                         : ReachUtils.calculateIntercept(targetBox, eyePos, endReachPos).first();
 
