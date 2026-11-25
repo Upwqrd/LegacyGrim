@@ -4,6 +4,7 @@ import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.data.IndexedVector3d;
 import ac.grim.grimac.utils.data.VectorData;
 import ac.grim.grimac.utils.data.packetentity.PacketEntity;
+import ac.grim.grimac.utils.data.packetentity.PacketEntityHappyGhast;
 import ac.grim.grimac.utils.data.packetentity.PacketEntityHorse;
 import ac.grim.grimac.utils.data.packetentity.PacketEntityRideable;
 import ac.grim.grimac.utils.math.Vector3dm;
@@ -30,7 +31,7 @@ public final class EntitySpeedAllowance {
                 || type == EntityTypes.HORSE || type == EntityTypes.DONKEY
                 || type == EntityTypes.MULE || type == EntityTypes.SKELETON_HORSE
                 || type == EntityTypes.ZOMBIE_HORSE || type == EntityTypes.CAMEL
-                || type == EntityTypes.PIG || type == EntityTypes.STRIDER;
+                || type == EntityTypes.PIG || type == EntityTypes.STRIDER || type == EntityTypes.HAPPY_GHAST;
     }
 
     public static void addCandidates(GrimPlayer player, List<VectorData> candidates) {
@@ -61,6 +62,9 @@ public final class EntitySpeedAllowance {
         if (riding.getRiding() != null || riding.passengers.isEmpty()
                 || riding.passengers.get(0) != player.compensatedEntities.self) {
             return false;
+        }
+        if (riding instanceof PacketEntityHappyGhast ghast) {
+            return ghast.isControllingPassenger();
         }
         if (riding instanceof PacketEntityHorse horse) {
             return horse.hasSaddle();
