@@ -197,7 +197,9 @@ public final class BlockPhaseProtection implements Listener {
         for (int x = (int) Math.floor(swept.minX); x <= Math.floor(swept.maxX); x++)
             for (int y = (int) Math.floor(swept.minY) - 1; y <= Math.floor(swept.maxY); y++)
                 for (int z = (int) Math.floor(swept.minZ); z <= Math.floor(swept.maxZ); z++) {
-                    if (!from.getWorld().isChunkLoaded(x >> 4, z >> 4)) return;
+                    if (!from.getWorld().isChunkLoaded(x >> 4, z >> 4)
+                            || GrimAPI.INSTANCE.getPlatform() == Platform.FOLIA
+                            && !Bukkit.isOwnedByCurrentRegion(from.getWorld(), x >> 4, z >> 4)) return;
                     var block = from.getWorld().getBlockAt(x, y, z);
                     web |= block.getType() == Material.COBWEB && new SimpleCollisionBox(x, y, z).isIntersected(body);
                     for (var box : block.getCollisionShape().getBoundingBoxes())
